@@ -152,7 +152,9 @@ export class UserClass {
         id: this._id.toString(),
         userId: this._id.toString(),
         email: this.user_email,
+        userEmail: this.user_email,
         role: this.user_role,
+        userRole: this.user_role,
         isSuperAdmin: this.is_super_admin,
         organizationId: this.organization_id ? this.organization_id.toString() : undefined
       },

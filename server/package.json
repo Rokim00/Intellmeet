@@ -25,7 +25,8 @@
     "mongoose": "^8.9.5",
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "tanstack": "^2.0.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

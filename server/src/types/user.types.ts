@@ -24,8 +24,10 @@ export interface IUserDocument extends Omit<IUser, '_id'>, Document {
 }
 
 export interface IUserRegisterInput {
-  name: string;
-  email: string;
+  name?: string;
+  userName?: string;
+  email?: string;
+  userEmail?: string;
   password: string;
   isCreatingOrg?: boolean;
   organizationName?: string;
@@ -33,6 +35,8 @@ export interface IUserRegisterInput {
   organizationSlug?: string;
   inviteCode?: string;
   avatarUrl?: string;
+  role?: UserRole;
+  userRole?: UserRole;
 }
 
 export interface IUserLoginInput {
