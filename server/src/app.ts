@@ -28,7 +28,7 @@ app.get('/favicon.ico', (_req: Request, res: Response) => {
   res.status(204).end();
 });
 
-// Raw OpenAPI JSON Spec Route (must be before swaggerUi.serve middleware)
+// Raw OpenAPI JSON Spec Route
 app.get('/api/docs/json', (_req: Request, res: Response) => {
   res.json(swaggerSpec);
 });
@@ -38,7 +38,7 @@ try {
   const swaggerUi = await import('swagger-ui-express');
   app.use('/api/docs', swaggerUi.default.serve, swaggerUi.default.setup(swaggerSpec));
 } catch {
-  // Graceful fallback if swaggerUi is loading
+  // Graceful fallback
 }
 
 // Friendly API Root Welcome Endpoints
