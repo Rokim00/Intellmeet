@@ -20,37 +20,32 @@ if (fs.existsSync(envLocalPath)) {
 
 const rawMongoUri = (process.env.MONGO_URI || process.env.MONGODB_URI || '').replace(/^["']|["']$/g, '');
 
-const requireEnv = (key: string, isRequired = true): string => {
-  const value = (process.env[key] || '').trim();
-  
-  if (value) {
-    return value;
-  }
-
-  if (isRequired) {
+const validateEnv = (): void => {
+  if (!rawMongoUri) {
+    console.error(
+      `[CRITICAL ERROR] Missing required MongoDB URI (MONGO_URI or MONGODB_URI).\n` +
+      `Please check server/.env or server/.env.local.`
+    );
     if (process.env.NODE_ENV === 'production') {
-      console.error(`[CRITICAL CONFIG ERROR] Required environment variable '${key}' is missing.`);
       process.exit(1);
-    } else {
-      console.error(`[CONFIG SOFT-ERROR] Missing environment variable '${key}'. Please define it in your .env or .env.local.`);
     }
   }
-
-  return '';
 };
 
+validateEnv();
+
 export const env: Readonly<EnvConfig> = Object.freeze({
-  NODE_ENV: requireEnv('NODE_ENV'),
-  PORT: parseInt(requireEnv('PORT'), 10),
-  MONGO_URI: rawMongoUri || requireEnv('MONGO_URI'),
-  CORS_ORIGIN: requireEnv('CORS_ORIGIN'),
-  JWT_ACCESS_SECRET: requireEnv('JWT_ACCESS_SECRET'),
-  JWT_ACCESS_EXPIRY: requireEnv('JWT_ACCESS_EXPIRY'),
-  JWT_REFRESH_SECRET: requireEnv('JWT_REFRESH_SECRET'),
-  JWT_REFRESH_EXPIRY: requireEnv('JWT_REFRESH_EXPIRY'),
-  AWS_ENDPOINT_URL: requireEnv('AWS_ENDPOINT_URL', false),
-  AWS_REGION: requireEnv('AWS_REGION', false),
-  AWS_ACCESS_KEY_ID: requireEnv('AWS_ACCESS_KEY_ID', false),
-  AWS_SECRET_ACCESS_KEY: requireEnv('AWS_SECRET_ACCESS_KEY', false),
-  AWS_S3_BUCKET: requireEnv('AWS_S3_BUCKET', false)
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  PORT: parseInt(process.env.PORT || '5000', 10),
+  MONGO_URI: rawMongoUri,
+  CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
+  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || 'intellmeet_dev_access_secret_key_2026',
+  JWT_ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY || '15m',
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'intellmeet_dev_refresh_secret_key_2026',
+  JWT_REFRESH_EXPIRY: process.env.JWT_REFRESH_EXPIRY || '7d',
+  AWS_ENDPOINT_URL: process.env.AWS_ENDPOINT_URL || 'http://localhost:4566',
+  AWS_REGION: process.env.AWS_REGION || 'us-east-1',
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || 'test',
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || 'test',
+  AWS_S3_BUCKET: process.env.AWS_S3_BUCKET || 'intellmeet-bucket'
 });

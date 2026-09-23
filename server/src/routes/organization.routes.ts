@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import {
   verifyInviteCode,
-  regenerateInviteCode,
   getMyOrganization,
-  getOrganizationMembers
+  getOrganizationMembers,
+  regenerateInviteCode
 } from '../controllers/organization.controller.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.middleware.js';
 
@@ -13,64 +14,86 @@ const router: Router = Router();
  * @openapi
  * /api/v1/organizations/invite/{code}:
  *   get:
- *     summary: Verify Organization Invite Code
- *     tags: [Organization]
+ *     summary: Verify Organization Invite Code Real-time
+ *     description: Public endpoint used by the frontend signup toggle to verify invite codes in real-time and retrieve the organization name and location.
+ *     tags:
+ *       - Organizations
  *     parameters:
  *       - in: path
  *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *         description: The organization invite code
+ *         example: ACME-LUBAJW
  *     responses:
  *       200:
- *         description: Invite code valid
+ *         description: Invite code is valid and organization details returned
  *       400:
- *         description: Code revoked or invalid format
+ *         description: Invite code has been revoked
  *       404:
- *         description: Organization not found
+ *         description: Invalid invite code. Organization not found
  */
-router.get('/invite/:code', verifyInviteCode);
+router.get('/invite/:code', asyncHandler(verifyInviteCode));
 
 /**
  * @openapi
  * /api/v1/organizations/invite/regenerate:
  *   post:
  *     summary: Regenerate Organization Invite Code (SuperAdmin Only)
- *     tags: [Organization]
+ *     description: Generates a new random invite code for the organization and revokes the previous code so it can no longer be used.
+ *     tags:
+ *       - Organizations
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Fresh invite code generated and previous code revoked
+ *         description: New invite code generated successfully and previous code revoked
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (SuperAdmin role required)
  */
-router.post('/invite/regenerate', authenticateUser, authorizeRoles('SuperAdmin'), regenerateInviteCode);
+router.post('/invite/regenerate', authenticateUser, authorizeRoles('SuperAdmin'), asyncHandler(regenerateInviteCode));
 
 /**
  * @openapi
  * /api/v1/organizations/me:
  *   get:
- *     summary: Get My Organization Details
- *     tags: [Organization]
+ *     summary: Get My Organization Profile
+ *     description: Returns organization details and owner information for the authenticated user.
+ *     tags:
+ *       - Organizations
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Organization details
+ *         description: Organization details retrieved
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User does not belong to an organization
  */
-router.get('/me', authenticateUser, getMyOrganization);
+router.get('/me', authenticateUser, asyncHandler(getMyOrganization));
 
 /**
  * @openapi
  * /api/v1/organizations/members:
  *   get:
- *     summary: Get Organization Members
- *     tags: [Organization]
+ *     summary: List All Organization Members
+ *     description: Returns all team members belonging to the authenticated user's organization.
+ *     tags:
+ *       - Organizations
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of members in organization
+ *         description: List of organization members retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       400:
+ *         description: User does not belong to any organization
  */
-router.get('/members', authenticateUser, getOrganizationMembers);
+router.get('/members', authenticateUser, asyncHandler(getOrganizationMembers));
 
 export default router;

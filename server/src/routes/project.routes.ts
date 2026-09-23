@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { authenticateUser, authorizeRoles } from '../middlewares/auth.middleware.js';
 import {
   createProject,
   getProjects,
@@ -6,16 +8,20 @@ import {
   updateProject,
   deleteProject
 } from '../controllers/project.controller.js';
-import { authenticateUser, authorizeRoles } from '../middlewares/auth.middleware.js';
 
 const router: Router = Router();
+
+// All project routes require authentication
+router.use(authenticateUser);
 
 /**
  * @openapi
  * /api/v1/projects:
  *   post:
- *     summary: Create New Project (SuperAdmin Only)
- *     tags: [Projects]
+ *     summary: Create a New Project (SuperAdmin Only)
+ *     description: Creates a project scoped to the SuperAdmin's organization.
+ *     tags:
+ *       - Projects
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -28,11 +34,14 @@ const router: Router = Router();
  *             properties:
  *               projectName:
  *                 type: string
+ *                 example: Mobile App v2
  *               projectDescription:
  *                 type: string
+ *                 example: Next generation mobile conferencing app
  *               projectStatus:
  *                 type: string
  *                 enum: [active, archived, completed]
+ *                 example: active
  *               projectHosts:
  *                 type: array
  *                 items:
@@ -43,25 +52,40 @@ const router: Router = Router();
  *                   type: string
  *     responses:
  *       201:
- *         description: Project created
+ *         description: Project created successfully
+ *       400:
+ *         description: Validation failed
+ *       403:
+ *         description: Forbidden (SuperAdmin role required)
+ */
+router.post('/', authorizeRoles('SuperAdmin'), asyncHandler(createProject));
+
+/**
+ * @openapi
+ * /api/v1/projects:
  *   get:
  *     summary: List Organization Projects
- *     tags: [Projects]
+ *     description: Returns all active projects belonging to the authenticated user's organization.
+ *     tags:
+ *       - Projects
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of projects
+ *         description: Projects list retrieved
+ *       401:
+ *         description: Unauthorized
  */
-router.post('/', authenticateUser, authorizeRoles('SuperAdmin'), createProject);
-router.get('/', authenticateUser, getProjects);
+router.get('/', asyncHandler(getProjects));
 
 /**
  * @openapi
  * /api/v1/projects/{id}:
  *   get:
- *     summary: Get Project Details
- *     tags: [Projects]
+ *     summary: Get Project Details By ID
+ *     description: Retrieves details of a specific project with populated host and member information.
+ *     tags:
+ *       - Projects
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -72,10 +96,20 @@ router.get('/', authenticateUser, getProjects);
  *           type: string
  *     responses:
  *       200:
- *         description: Project details
+ *         description: Project details retrieved
+ *       404:
+ *         description: Project not found
+ */
+router.get('/:id', asyncHandler(getProjectById));
+
+/**
+ * @openapi
+ * /api/v1/projects/{id}:
  *   patch:
- *     summary: Update Project / Assign Hosts & Members (SuperAdmin Only)
- *     tags: [Projects]
+ *     summary: Update Project Details & Assign Hosts (SuperAdmin Only)
+ *     description: Updates project metadata, status, or assigns project Hosts / Members.
+ *     tags:
+ *       - Projects
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -86,10 +120,22 @@ router.get('/', authenticateUser, getProjects);
  *           type: string
  *     responses:
  *       200:
- *         description: Project updated
+ *         description: Project updated successfully
+ *       403:
+ *         description: Forbidden (SuperAdmin role required)
+ *       404:
+ *         description: Project not found
+ */
+router.patch('/:id', authorizeRoles('SuperAdmin'), asyncHandler(updateProject));
+
+/**
+ * @openapi
+ * /api/v1/projects/{id}:
  *   delete:
  *     summary: Delete Project (SuperAdmin Only)
- *     tags: [Projects]
+ *     description: Permanently removes a project from the organization.
+ *     tags:
+ *       - Projects
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -100,10 +146,12 @@ router.get('/', authenticateUser, getProjects);
  *           type: string
  *     responses:
  *       200:
- *         description: Project deleted
+ *         description: Project deleted successfully
+ *       403:
+ *         description: Forbidden (SuperAdmin role required)
+ *       404:
+ *         description: Project not found
  */
-router.get('/:id', authenticateUser, getProjectById);
-router.patch('/:id', authenticateUser, authorizeRoles('SuperAdmin'), updateProject);
-router.delete('/:id', authenticateUser, authorizeRoles('SuperAdmin'), deleteProject);
+router.delete('/:id', authorizeRoles('SuperAdmin'), asyncHandler(deleteProject));
 
 export default router;

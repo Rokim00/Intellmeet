@@ -12,6 +12,7 @@
     "db:clean": "tsx src/scripts/clean-db.ts"
   },
   "dependencies": {
+    "@typegoose/typegoose": "^12.12.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -24,8 +25,7 @@
     "mongoose": "^8.9.5",
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "@typegoose/typegoose": "^12.12.0"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
