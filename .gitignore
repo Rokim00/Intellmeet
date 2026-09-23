@@ -4,7 +4,11 @@ server/node_modules/
 dist/
 client/dist/
 .env
-server/.env
+server/.env.local
 client/.env
 *.env
 .DS_Store
+.agents/*.local
+server/doc/
+server/docs/
+server/tests/bruno/
