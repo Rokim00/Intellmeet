@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types/auth';
+import { setAccessToken } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -24,10 +25,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (savedToken && savedUser) {
       try {
         setToken(savedToken);
+        setAccessToken(savedToken); // Push token into memory for Axios interceptor
         setUser(JSON.parse(savedUser));
       } catch (e) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
+        setAccessToken(null);
       }
     }
     setLoading(false);
@@ -36,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (userData: User, accessToken: string) => {
     setUser(userData);
     setToken(accessToken);
+    setAccessToken(accessToken); // Push token into memory for Axios interceptor
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('user', JSON.stringify(userData));
   };
@@ -43,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     setToken(null);
+    setAccessToken(null); // Clear token from memory
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
   };
