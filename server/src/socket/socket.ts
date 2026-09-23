@@ -1,7 +1,7 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { logger } from '../utils/logger.js';
-import { env } from '../config/env.js';
+import { corsOptions } from '../config/cors.js';
 import {
   ServerToClientEvents,
   ClientToServerEvents,
@@ -32,11 +32,7 @@ export const initSocket = (httpServer: HTTPServer): TypedSocketServer => {
     InterServerEvents,
     SocketData
   >(httpServer, {
-    cors: {
-      origin: env.CORS_ORIGIN,
-      methods: ['GET', 'POST'],
-      credentials: true
-    }
+    cors: corsOptions
   });
 
   io.on('connection', (socket: TypedSocket) => {

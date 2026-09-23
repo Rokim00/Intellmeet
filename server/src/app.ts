@@ -6,19 +6,14 @@ import apiRouter from './routes/index.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { ApiResponse } from './utils/apiResponse.js';
-import { env } from './config/env.js';
+import { corsOptions } from './config/cors.js';
 import { swaggerSpec } from './config/swagger.js';
 
 const app: Application = express();
 
 // Security Middlewares
 app.use(helmet());
-app.use(
-  cors({
-    origin: env.CORS_ORIGIN,
-    credentials: true
-  })
-);
+app.use(cors(corsOptions));
 
 // Body Parsers & Cookie Parser
 app.use(express.json({ limit: '16kb' }));
