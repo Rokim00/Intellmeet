@@ -2,46 +2,46 @@ name: Server CI
 
 on:
   push:
-    branches: [main, master, dev, development]
+    branches: [main, master, dev, development, aswath]
     paths:
       - 'server/**'
       - '.github/workflows/server-ci.yml'
+      - 'pnpm-workspace.yaml'
   pull_request:
-    branches: [main, master, dev, development]
+    branches: [main, master, dev, development, aswath]
     paths:
       - 'server/**'
       - '.github/workflows/server-ci.yml'
+      - 'pnpm-workspace.yaml'
 
 jobs:
   server-lint-and-build:
     name: Lint & Build Checks
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: server
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
           cache-dependency-path: 'server/pnpm-lock.yaml'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm --filter server install
 
       - name: Run ESLint check
+        working-directory: server
         run: pnpm run lint
 
       - name: Run TypeScript build check
+        working-directory: server
         run: pnpm run build
