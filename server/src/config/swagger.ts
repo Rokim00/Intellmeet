@@ -23,7 +23,17 @@ const swaggerOptions: Options = {
         url: 'http://localhost:5000',
         description: 'Local Development Server'
       }
-    ]
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Enter your JWT access token'
+        }
+      }
+    }
   },
   apis: [routesPathTs, routesPathJs, distRoutesPathJs]
 };
