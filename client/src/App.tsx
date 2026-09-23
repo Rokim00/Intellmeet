@@ -16,7 +16,7 @@ const TestDashboard = () => {
           <p><span className="text-neutral-500">Name:</span> {user?.name}</p>
           <p><span className="text-neutral-500">Email:</span> {user?.email}</p>
           <p><span className="text-neutral-500">Role:</span> {user?.role}</p>
-          <p><span className="text-neutral-500">User ID:</span> {user?._id}</p>
+          <p><span className="text-neutral-500">User ID:</span> {user?.id || (user as any)?._id}</p>
         </div>
         <button
           onClick={() => logout()}

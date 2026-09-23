@@ -1,110 +1,69 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import api, { setAccessToken } from '../services/api';
-import type { User, LoginDTO, SignupDTO, AuthResponse } from '../types/auth';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { User } from '../types/auth';
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  login: (credentials: LoginDTO) => Promise<void>;
-  signup: (userData: SignupDTO) => Promise<void>;
-  logout: () => Promise<void>;
+  token: string | null;
   isAuthenticated: boolean;
+  loading: boolean;
+  login: (user: User, token: string) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Restore authenticated session on app initialization
   useEffect(() => {
-    let isMounted = true;
+    const savedToken = localStorage.getItem('accessToken');
+    const savedUser = localStorage.getItem('user');
 
-    const restoreSession = async () => {
+    if (savedToken && savedUser) {
       try {
-        // 1. Attempt token refresh using the HTTP-only cookie set by backend
-        const refreshResponse = await api.post<{ data: { accessToken: string } }>('/refresh');
-        const token = refreshResponse.data?.data?.accessToken;
-
-        if (token) {
-          setAccessToken(token);
-
-          // 2. Fetch authenticated user profile
-          const userResponse = await api.get<{ data: User }>('/me');
-          if (isMounted) {
-            setUser(userResponse.data?.data || null);
-          }
-        }
-      } catch {
-        // If refresh fails (no cookie / expired session), reset state cleanly
-        if (isMounted) {
-          setAccessToken(null);
-          setUser(null);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
       }
-    };
-
-    restoreSession();
-
-    return () => {
-      isMounted = false;
-    };
+    }
+    setLoading(false);
   }, []);
 
-  const login = async (credentials: LoginDTO): Promise<void> => {
-    const response = await api.post<AuthResponse>('/login', credentials);
-    const { user: loggedInUser, accessToken } = response.data.data;
-    setAccessToken(accessToken);
-    setUser(loggedInUser);
+  const login = (userData: User, accessToken: string) => {
+    setUser(userData);
+    setToken(accessToken);
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const signup = async (userData: SignupDTO): Promise<void> => {
-    const response = await api.post<AuthResponse>('/signup', userData);
-    const { user: registeredUser, accessToken } = response.data.data;
-    setAccessToken(accessToken);
-    setUser(registeredUser);
-  };
-
-  const logout = async (): Promise<void> => {
-    try {
-      await api.post('/logout');
-    } catch {
-      // Proceed with local client teardown even if server logout fails
-    } finally {
-      setAccessToken(null);
-      setUser(null);
-    }
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        token,
+        isAuthenticated: !!token,
         loading,
         login,
-        signup,
         logout,
-        isAuthenticated: !!user,
       }}
     >
-      {loading ? (
-        <div className="min-h-screen bg-black flex items-center justify-center text-white">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-emerald-500"></div>
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
