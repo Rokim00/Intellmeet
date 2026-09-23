@@ -7,7 +7,6 @@ import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { ApiResponse } from './utils/apiResponse.js';
 import { corsOptions } from './config/cors.js';
-import { env } from './config/env.js';
 import { swaggerSpec } from './config/swagger.js';
 
 const app: Application = express();
