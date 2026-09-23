@@ -15,8 +15,11 @@ const router: Router = Router();
  * @openapi
  * /api/v1/auth/signup:
  *   post:
- *     summary: User Signup / Registration
- *     description: Creates a new user account with hashed password and returns access token.
+ *     summary: User Signup & Dynamic Organization Setup
+ *     description: |
+ *       Creates a new user account.
+ *       - **Case 1 (isCreatingOrg: true)**: Creates a new Organization, automatically generates a unique invite code, and sets user as SuperAdmin. Do NOT include `inviteCode`.
+ *       - **Case 2 (isCreatingOrg: false)**: Joins an existing Organization using its `inviteCode`. Sets user as Member.
  *     tags:
  *       - Authentication
  *     requestBody:
@@ -24,30 +27,66 @@ const router: Router = Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *                 example: Alex Morgan
- *               email:
- *                 type: string
- *                 example: alex@intellmeet.com
- *               password:
- *                 type: string
- *                 example: SecurePass123!
- *               role:
- *                 type: string
- *                 enum: [Admin, Member]
- *                 example: Member
+ *             oneOf:
+ *               - title: Create Organization (SuperAdmin)
+ *                 type: object
+ *                 required:
+ *                   - name
+ *                   - email
+ *                   - password
+ *                   - isCreatingOrg
+ *                   - organizationName
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                     example: Alex Morgan
+ *                   email:
+ *                     type: string
+ *                     example: alex@acmecorp.com
+ *                   password:
+ *                     type: string
+ *                     example: SecurePass123!
+ *                   isCreatingOrg:
+ *                     type: boolean
+ *                     example: true
+ *                   organizationName:
+ *                     type: string
+ *                     example: Acme Corporation
+ *                   organizationLocation:
+ *                     type: string
+ *                     example: San Francisco, USA
+ *                   organizationSlug:
+ *                     type: string
+ *                     example: acme
+ *               - title: Join via Invite Code (Member)
+ *                 type: object
+ *                 required:
+ *                   - name
+ *                   - email
+ *                   - password
+ *                   - isCreatingOrg
+ *                   - inviteCode
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                     example: Jane Smith
+ *                   email:
+ *                     type: string
+ *                     example: jane@acmecorp.com
+ *                   password:
+ *                     type: string
+ *                     example: SecurePass123!
+ *                   isCreatingOrg:
+ *                     type: boolean
+ *                     example: false
+ *                   inviteCode:
+ *                     type: string
+ *                     example: ACME-K9X3P7
  *     responses:
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Invalid input or user already exists
+ *         description: Validation error or invite code invalid / revoked
  */
 router.post('/signup', asyncHandler(registerUser));
 
@@ -56,7 +95,7 @@ router.post('/signup', asyncHandler(registerUser));
  * /api/v1/auth/login:
  *   post:
  *     summary: User Login
- *     description: Authenticates user credentials, sets HTTP-only refresh cookie, and returns access token.
+ *     description: Authenticates user credentials, sets HTTP-only refresh cookie, and returns access token + populated organization details.
  *     tags:
  *       - Authentication
  *     requestBody:
@@ -71,7 +110,7 @@ router.post('/signup', asyncHandler(registerUser));
  *             properties:
  *               email:
  *                 type: string
- *                 example: alex@intellmeet.com
+ *                 example: alex@acmecorp.com
  *               password:
  *                 type: string
  *                 example: SecurePass123!
@@ -88,7 +127,7 @@ router.post('/login', asyncHandler(loginUser));
  * /api/v1/auth/refresh-token:
  *   post:
  *     summary: Refresh Access Token
- *     description: Rotates refresh token and generates a new 15-minute access token.
+ *     description: Rotates refresh token from HTTP-only cookie and generates a new 15-minute access token.
  *     tags:
  *       - Authentication
  *     responses:
@@ -104,9 +143,11 @@ router.post('/refresh-token', asyncHandler(refreshAccessToken));
  * /api/v1/auth/logout:
  *   post:
  *     summary: User Logout
- *     description: Invalidates refresh token and clears HTTP-only cookie.
+ *     description: Invalidates refresh token in MongoDB and clears HTTP-only cookie.
  *     tags:
  *       - Authentication
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Logged out successfully
@@ -117,8 +158,8 @@ router.post('/logout', asyncHandler(logoutUser));
  * @openapi
  * /api/v1/auth/me:
  *   get:
- *     summary: Get Current Authenticated User Profile
- *     description: Protected route returning profile information for the Bearer-authenticated user.
+ *     summary: Get Current Authenticated User Profile & Organization
+ *     description: Protected route returning full user profile and populated organization information.
  *     tags:
  *       - Authentication
  *     security:

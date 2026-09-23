@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
+    "lint:fix": "eslint src --fix",
+    "db:clean": "tsx src/scripts/clean-db.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

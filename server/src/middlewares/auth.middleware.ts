@@ -28,8 +28,9 @@ export const authorizeRoles = (...allowedRoles: UserRole[]) => {
       return next(ApiError.unauthorized('Authentication required'));
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      return next(ApiError.forbidden(`Role '${req.user.role}' is not authorized to access this resource`));
+    const currentRole = req.user.userRole || req.user.role;
+    if (!allowedRoles.includes(currentRole)) {
+      return next(ApiError.forbidden(`Role '${currentRole}' is not authorized to access this resource`));
     }
 
     next();

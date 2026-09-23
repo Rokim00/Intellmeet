@@ -32,8 +32,19 @@ export const errorHandler = (
   } else if ('code' in err && (err as MongoDuplicateKeyError).code === 11000) {
     // Mongoose Duplicate Key Error
     const mongoDupError = err as MongoDuplicateKeyError;
-    const field = Object.keys(mongoDupError.keyValue)[0];
-    error = new ApiError(400, `An account with that ${field} already exists.`, [], err.stack);
+    const rawField = Object.keys(mongoDupError.keyValue || {})[0] || 'field';
+    const value = mongoDupError.keyValue ? mongoDupError.keyValue[rawField] : '';
+
+    let friendlyField = rawField;
+    if (rawField === 'user_email' || rawField === 'email') friendlyField = 'email';
+    if (rawField === 'organization_slug' || rawField === 'slug') friendlyField = 'organizationSlug';
+    if (rawField === 'organization_name' || rawField === 'name') friendlyField = 'organizationName';
+    if (rawField === 'organization_invite_code' || rawField === 'inviteCode') friendlyField = 'inviteCode';
+    if (rawField === 'project_name') friendlyField = 'projectName';
+
+    const message = `A record with this ${friendlyField} '${value}' already exists. Please choose a different ${friendlyField}.`;
+    const errorsArray = [{ field: friendlyField, message }];
+    error = new ApiError(400, message, errorsArray, err.stack);
   } else if (err instanceof SyntaxError && 'status' in err && (err as unknown as { status: number }).status === 400 && 'body' in err) {
     // Express JSON syntax parser error (e.g. trailing commas)
     error = new ApiError(400, 'Invalid JSON payload. Please check for syntax errors such as trailing commas or malformed quotes.', [], err.stack);
