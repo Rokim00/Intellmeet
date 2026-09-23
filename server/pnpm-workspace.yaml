@@ -1,4 +1,1 @@
-allowBuilds:
-  '@scarf/scarf': false
-  esbuild: false
-  pnpm: false
+# Workspace definition is located at root pnpm-workspace.yaml
