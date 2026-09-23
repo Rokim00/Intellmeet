@@ -3,6 +3,11 @@
 docker-compose up -d --build
 ```
 
+# Database to run in Docker, but the Server to run locally 
+```ps
+docker compose up -d mongodb-local mongo-express floci-aws
+```
+
 # View server logs
 ```ps
 docker-compose logs -f intellmeet-server

@@ -3,6 +3,10 @@ export interface EnvConfig {
   PORT: number;
   MONGO_URI: string;
   CORS_ORIGIN: string;
+  JWT_ACCESS_SECRET: string;
+  JWT_ACCESS_EXPIRY: string;
+  JWT_REFRESH_SECRET: string;
+  JWT_REFRESH_EXPIRY: string;
   AWS_ENDPOINT_URL?: string;
   AWS_REGION?: string;
   AWS_ACCESS_KEY_ID?: string;
