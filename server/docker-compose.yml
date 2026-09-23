@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+  # IntellMeet Backend API Service
+  intellmeet-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: intellmeet-server
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=development
+      - CORS_ORIGIN=*
+      - MONGO_URI=mongodb://mongodb-local:27017/intellmeet
+      - AWS_ENDPOINT_URL=http://floci-aws:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_S3_BUCKET=intellmeet-bucket
+    depends_on:
+      - mongodb-local
+      - floci-aws
+    networks:
+      - intellmeet-network
+
+  # Local MongoDB Database Service
+  mongodb-local:
+    image: mongo:latest
+    container_name: intellmeet-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - intellmeet-network
+
+  # Floci - Local AWS Cloud Emulator (S3 / Local Cloud testing)
+  floci-aws:
+    image: floci/floci:latest
+    container_name: intellmeet-floci-aws
+    restart: unless-stopped
+    ports:
+      - "4566:4566"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - intellmeet-network
+
+networks:
+  intellmeet-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
