@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Signup } from './pages/Signup';
+import { Login } from './pages/Login'; // <-- Added import
 
-// Temporary dummy dashboard to verify successful registration redirect
+// Temporary dummy dashboard to verify successful registration/login redirect
 const TestDashboard = () => {
   const { user, logout } = useAuth();
   return (
@@ -11,7 +12,7 @@ const TestDashboard = () => {
         <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-xl font-bold">
           ✓
         </div>
-        <h2 className="text-2xl font-bold text-white">Registration Successful!</h2>
+        <h2 className="text-2xl font-bold text-white">Authentication Successful!</h2>
         <div className="bg-[#1a1d24] p-4 rounded-xl text-left text-sm space-y-2 text-neutral-300">
           <p><span className="text-neutral-500">Name:</span> {user?.name}</p>
           <p><span className="text-neutral-500">Email:</span> {user?.email}</p>
@@ -35,10 +36,9 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} /> {/* <-- Updated route */}
           <Route path="/dashboard" element={<TestDashboard />} />
-          {/* Temporary placeholder for login until we build it next */}
-          <Route path="/login" element={<div className="text-white p-6 bg-black min-h-screen">Login Page Coming Next</div>} />
-          <Route path="*" element={<Navigate to="/signup" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} /> {/* Default fallback to login */}
         </Routes>
       </BrowserRouter>
     </AuthProvider>
