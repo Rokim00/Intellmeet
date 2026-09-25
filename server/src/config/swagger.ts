@@ -1,6 +1,9 @@
 import swaggerJSDoc, { Options } from 'swagger-jsdoc';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { env } from './env.js';
+import { logger } from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,3 +42,23 @@ const swaggerOptions: Options = {
 };
 
 export const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
+/**
+ * Writes the generated spec to server/openapi.json.
+ * Dev-only: never called when NODE_ENV=production, so the file is not
+ * read or written on a production host.
+ */
+export const writeOpenApiFile = (outputPath: string): boolean => {
+  if (env.NODE_ENV === 'production') {
+    return false;
+  }
+
+  try {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, `${JSON.stringify(swaggerSpec, null, 2)}\n`, 'utf8');
+    return true;
+  } catch (error) {
+    logger.warn(`Could not write openapi.json: ${(error as Error).message}`);
+    return false;
+  }
+};
