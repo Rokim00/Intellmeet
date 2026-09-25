@@ -7,7 +7,6 @@ import {
   getSortedRowModel,
   flexRender,
   createColumnHelper,
-  type ColumnDef,
 } from '@tanstack/react-table';
 import {
   Search,
@@ -43,9 +42,9 @@ export const MembersTable: React.FC<MembersTableProps> = ({
   const [deletingMember, setDeletingMember] = useState<Member | null>(null);
 
   // Active filter logic & normalization for any backend format (User or Member)
-  const filteredData = useMemo(() => {
+  const filteredData: Member[] = useMemo(() => {
     return initialMembers
-      .map((m: Member) => ({
+      .map((m: Member): Member => ({
         id: m.id || m._id || m.userId || Math.random().toString(),
         name: m.name || m.userName || m.userEmail || 'Team Member',
         email: m.email || m.userEmail || '',
@@ -69,7 +68,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
       });
   }, [initialMembers, roleFilter, statusFilter, globalFilter]);
 
-  const columns = useMemo<ColumnDef<Member>[]>(
+  const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
         header: 'Member',
