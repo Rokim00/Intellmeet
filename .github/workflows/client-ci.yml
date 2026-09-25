@@ -7,12 +7,14 @@ on:
       - 'client/**'
       - '.github/workflows/client-ci.yml'
       - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
   pull_request:
     branches: [main, master, dev, development, aswath]
     paths:
       - 'client/**'
       - '.github/workflows/client-ci.yml'
       - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
 
 jobs:
   client-lint-and-build:
@@ -33,7 +35,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: 'client/pnpm-lock.yaml'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: Install dependencies
         run: pnpm --filter client install
