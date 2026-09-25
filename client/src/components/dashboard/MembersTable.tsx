@@ -192,6 +192,8 @@ export const MembersTable: React.FC<MembersTableProps> = ({
     []
   );
 
+  // TanStack Table returns stateful functions that cannot be memoized safely.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: filteredData,
     columns,
