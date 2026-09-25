@@ -12,3 +12,4 @@ client/.env
 server/doc/
 server/docs/
 server/tests/bruno/
+server/openapi.json

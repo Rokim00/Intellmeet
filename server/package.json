@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
+    "lint:fix": "eslint src --fix",
+    "openapi": "tsx src/scripts/dumpOpenApi.ts"
   },
   "dependencies": {
     "@typegoose/typegoose": "^12.12.0",
