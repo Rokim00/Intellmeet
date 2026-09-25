@@ -3,6 +3,8 @@ import { Loader2 } from 'lucide-react';
 import { createProject } from '@/api/project/project.api';
 import type { Project } from '@/types/project.types';
 import { parseApiError } from '@/utils/apiError';
+import { useMutation } from '@/hooks/useApi';
+import { queryKeys } from '@/api/queryClient';
 import { Modal, ModalFooterCancel } from '@/components/ui/modal';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -30,46 +32,50 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('active');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
 
-  const handleClose = () => {
-    if (loading) return;
+  const { mutate, pending: loading, error } = useMutation<Project, string>({
+    mutationFn: (projectStatus) =>
+      createProject({
+        name: name.trim(),
+        description: description.trim(),
+        status: projectStatus,
+      }),
+    invalidates: [queryKeys.projects.all],
+    onSuccess: (project) => {
+      onCreated(project);
+      setName('');
+      setDescription('');
+      setStatus('active');
+      setNameError('');
+      onClose();
+    },
+  });
+
+  const reset = () => {
     setName('');
     setDescription('');
     setStatus('active');
-    setError('');
+    setNameError('');
     onClose();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleClose = () => {
+    if (loading) return;
+    reset();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Project name is required');
+      setNameError('Project name is required');
       return;
     }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const res = await createProject({
-        name: name.trim(),
-        description: description.trim(),
-        status,
-      });
-
-      if (res.data?.data) {
-        onCreated(res.data.data);
-        handleClose();
-      }
-    } catch (err) {
-      const { message } = parseApiError(err);
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
+    setNameError('');
+    void mutate(status);
   };
+
+  const submitError = error ? parseApiError(error).message : '';
 
   return (
     <Modal
@@ -88,16 +94,16 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       }
     >
       <form id="create-project-form" onSubmit={handleSubmit} className="space-y-4">
-        {error && (
+        {(submitError || nameError) && (
           <div
             role="alert"
             className="rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive"
           >
-            {error}
+            {nameError || submitError}
           </div>
         )}
 
-        <FormField label="Project Name" htmlFor="project-name" required>
+        <FormField label="Project Name" htmlFor="project-name" required error={nameError}>
           <Input
             id="project-name"
             name="name"

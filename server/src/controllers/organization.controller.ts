@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ApiResponse } from '../utils/apiResponse.js';
+import { getRequestScope } from '../utils/scope.js';
 import {
   verifyInviteCodeService,
   getMyOrganizationService,
@@ -20,8 +21,8 @@ export const verifyInviteCode = async (req: Request, res: Response): Promise<Res
 };
 
 export const getMyOrganization = async (req: Request, res: Response): Promise<Response> => {
-  const orgId = req.user?.organizationId || '';
-  const result = await getMyOrganizationService(orgId);
+  const { organizationId } = getRequestScope(req);
+  const result = await getMyOrganizationService(organizationId);
 
   return ApiResponse.success(
     res,
@@ -32,8 +33,8 @@ export const getMyOrganization = async (req: Request, res: Response): Promise<Re
 };
 
 export const getOrganizationMembers = async (req: Request, res: Response): Promise<Response> => {
-  const orgId = req.user?.organizationId || '';
-  const result = await getOrganizationMembersService(orgId, req.query as Record<string, unknown>);
+  const { organizationId } = getRequestScope(req);
+  const result = await getOrganizationMembersService(organizationId, req.query as Record<string, unknown>);
 
   return ApiResponse.success(
     res,
@@ -44,8 +45,8 @@ export const getOrganizationMembers = async (req: Request, res: Response): Promi
 };
 
 export const regenerateInviteCode = async (req: Request, res: Response): Promise<Response> => {
-  const orgId = req.user?.organizationId || '';
-  const result = await regenerateInviteCodeService(orgId);
+  const { organizationId } = getRequestScope(req);
+  const result = await regenerateInviteCodeService(organizationId);
 
   return ApiResponse.success(
     res,

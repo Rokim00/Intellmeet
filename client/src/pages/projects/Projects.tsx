@@ -20,7 +20,7 @@ import { CreateProjectModal } from '@/components/dashboard/CreateProjectModal';
 export const Projects: React.FC = () => {
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('status') || 'ALL';
-  const { projects, loading, addProject, refreshProjects } = useProject();
+  const { projects, loading, addProject } = useProject();
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const filteredProjects = projects.filter((p) => {
@@ -29,9 +29,10 @@ export const Projects: React.FC = () => {
     return status.toLowerCase() === currentTab.toLowerCase();
   });
 
+  // `useMutation` already invalidates the projects query, and `addProject`
+  // seeds the cache, so no extra refetch is needed here.
   const handleProjectCreated = (newProj: Project) => {
     addProject(newProj);
-    refreshProjects();
   };
 
   const pageTitle =

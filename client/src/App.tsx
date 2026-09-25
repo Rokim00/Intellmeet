@@ -1,7 +1,11 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { createQueryClient } from '@/api/queryClient';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProjectProvider } from '@/context/ProjectContext';
+import { OrganizationProvider } from '@/context/OrganizationContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
@@ -52,47 +56,55 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <BrowserRouter>
-    <ThemeProvider>
-      <AuthProvider>
-        <ProjectProvider>
-          <TooltipProvider>
-            <Suspense fallback={<SuspenseFallback />}>
-              <Routes>
-                <Route path="/" element={<Navigate to="/login" replace />} />
-                <Route
-                  path="/login"
-                  element={
-                    <GuestRoute>
-                      <Login />
-                    </GuestRoute>
-                  }
-                />
-                <Route
-                  path="/signup"
-                  element={
-                    <GuestRoute>
-                      <Signup />
-                    </GuestRoute>
-                  }
-                />
+const queryClient = createQueryClient();
 
-                {/* Protected Dashboard Routes with SidebarLayout */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/meetings" element={<Meetings />} />
-                  <Route path="/tasks" element={<Tasks />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                </Route>
-              </Routes>
-            </Suspense>
-          </TooltipProvider>
-        </ProjectProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </BrowserRouter>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <ProjectProvider>
+            <OrganizationProvider>
+              <TooltipProvider>
+                <Suspense fallback={<SuspenseFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route
+                      path="/login"
+                      element={
+                        <GuestRoute>
+                          <Login />
+                        </GuestRoute>
+                      }
+                    />
+                    <Route
+                      path="/signup"
+                      element={
+                        <GuestRoute>
+                          <Signup />
+                        </GuestRoute>
+                      }
+                    />
+
+                    {/* Protected Dashboard Routes with SidebarLayout */}
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/projects" element={<Projects />} />
+                      <Route path="/meetings" element={<Meetings />} />
+                      <Route path="/tasks" element={<Tasks />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                    </Route>
+                  </Routes>
+                </Suspense>
+              </TooltipProvider>
+            </OrganizationProvider>
+          </ProjectProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+    {/* Devtools are stripped from the production bundle by the Vite build. */}
+    <ReactQueryDevtools initialIsOpen={false} />
+  </QueryClientProvider>
 );
 
 export default App;

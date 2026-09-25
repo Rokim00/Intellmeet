@@ -2,7 +2,6 @@ import { Project } from '../models/project.model.js';
 import { User } from '../models/user.model.js';
 import { Organization } from '../models/organization.model.js';
 import { ApiError } from '../utils/apiError.js';
-import { Types } from 'mongoose';
 import {
   IAddProjectMembersInput,
   ICreateProjectInput,
@@ -13,36 +12,54 @@ import {
 } from '../types/index.js';
 import { generateProjectCode } from '../utils/codeGenerator.js';
 import { getPagination, buildPaginatedResult } from '../utils/pagination.js';
-
-const USER_POPULATE = 'user_name user_email avatar_url user_role is_super_admin';
-const USER_SELECT = '_id user_name user_email avatar_url user_role is_super_admin';
+import { findPaginated } from '../utils/paginatedFind.js';
+import { assertObjectId, toObjectIdString } from '../utils/objectId.js';
+import { requireOrganizationId } from '../utils/scope.js';
+import { USER_POPULATE, USER_SELECT } from '../utils/projections.js';
 
 export const PROJECT_MEMBER_LIMIT = 50;
 export const PROJECT_HOST_LIMIT = 3;
 
-const assertObjectId = (value: string, field: string): string => {
-  if (!value || !Types.ObjectId.isValid(value)) {
-    throw ApiError.badRequest(`Invalid ${field}`, [{ field, message: `Invalid ${field}` }]);
+const PROJECT_POPULATE = [
+  { path: 'project_hosts', select: USER_POPULATE },
+  { path: 'project_members', select: USER_POPULATE },
+  { path: 'created_by', select: USER_POPULATE }
+];
+
+/** Every project lookup is tenant-scoped: an id alone never grants access. */
+const findScopedProject = async (projectId: string, organizationId: string) => {
+  const project = await Project.findOne({ _id: projectId, organization_id: organizationId });
+  if (!project) {
+    throw ApiError.notFound('Project not found');
   }
-  return value;
+  return project;
 };
 
-const toIdString = (value: unknown): string => {
-  if (value && typeof value === 'object' && '_id' in value) {
-    return String((value as { _id: unknown })._id);
-  }
-  return String(value);
-};
+const findPopulatedProject = async (projectId: string) =>
+  await Project.findById(projectId)
+    .populate('project_hosts', USER_POPULATE)
+    .populate('project_members', USER_POPULATE)
+    .populate('created_by', USER_POPULATE);
 
 /** Builds the project-scoped member list: every host is also a member of that project. */
 const buildMemberList = (project: {
   project_hosts: unknown[];
   project_members: unknown[];
 }): IProjectMember[] => {
-  const hosts = new Set(project.project_hosts.map(toIdString));
-  const all = new Set<string>([...hosts, ...project.project_members.map(toIdString)]);
+  const hosts = new Set(project.project_hosts.map(toObjectIdString));
+  const all = new Set<string>([...hosts, ...project.project_members.map(toObjectIdString)]);
 
   return [...all].map((userId) => ({ userId, projectRole: hosts.has(userId) ? 'Host' : 'Member' }));
+};
+
+const PROJECT_ROLES: ProjectRole[] = ['Member', 'Host'];
+
+const assertProjectRole = (role: string): void => {
+  if (!PROJECT_ROLES.includes(role as ProjectRole)) {
+    throw ApiError.badRequest('projectRole must be either Member or Host', [
+      { field: 'projectRole', message: 'Invalid projectRole' }
+    ]);
+  }
 };
 
 /** Guards the per-project roster caps. Demotions are always allowed; only growth is blocked. */
@@ -86,26 +103,15 @@ const assertProjectMemberUsers = async (userIds: string[], organizationId: strin
   return found;
 };
 
-const findPopulatedProject = async (projectId: string) =>
-  await Project.findById(projectId)
-    .populate('project_hosts', USER_POPULATE)
-    .populate('project_members', USER_POPULATE)
-    .populate('created_by', USER_POPULATE);
-
 export const getProjectMembersService = async (
   projectId: string,
   organizationId: string,
   query: Record<string, unknown> = {}
 ) => {
-  if (!organizationId) {
-    throw ApiError.badRequest('User must belong to an organization to view project members');
-  }
+  requireOrganizationId(organizationId, 'view project members');
   assertObjectId(projectId, 'id');
 
-  const project = await Project.findOne({ _id: projectId, organization_id: organizationId });
-  if (!project) {
-    throw ApiError.notFound('Project not found');
-  }
+  const project = await findScopedProject(projectId, organizationId);
 
   const allMembers = buildMemberList(project);
   const pagination = getPagination(query);
@@ -198,38 +204,24 @@ export const getProjectsService = async (
   organizationId: string,
   query: Record<string, unknown> = {}
 ) => {
-  if (!organizationId) {
-    throw ApiError.badRequest('User must belong to an organization to view projects');
-  }
+  requireOrganizationId(organizationId, 'view projects');
 
-  const filter = { organization_id: organizationId, project_status: { $ne: 'archived' } };
-  const pagination = getPagination(query);
-
-  const [projects, total] = await Promise.all([
-    Project.find(filter)
-      .populate('project_hosts', USER_POPULATE)
-      .populate('project_members', USER_POPULATE)
-      .populate('created_by', USER_POPULATE)
-      .sort({ created_at: -1 })
-      .skip(pagination.skip)
-      .limit(pagination.limit),
-    Project.countDocuments(filter)
-  ]);
-
-  return buildPaginatedResult(projects, total, pagination);
+  return findPaginated(
+    Project,
+    { organization_id: organizationId, project_status: { $ne: 'archived' } },
+    query,
+    { sort: { created_at: -1 }, populate: PROJECT_POPULATE }
+  );
 };
 
 export const getProjectByIdService = async (projectId: string, organizationId: string) => {
-  const project = await Project.findOne({ _id: projectId, organization_id: organizationId })
-    .populate('project_hosts', 'user_name user_email avatar_url user_role is_super_admin')
-    .populate('project_members', 'user_name user_email avatar_url user_role is_super_admin')
-    .populate('created_by', 'user_name user_email avatar_url user_role is_super_admin');
+  // Scope by organization first: a bare findById would let any org read any project.
+  await findScopedProject(assertObjectId(projectId, 'id'), organizationId);
 
-  if (!project) {
-    throw ApiError.notFound('Project not found');
-  }
-
-  return project;
+  return await Project.findById(projectId)
+    .populate('project_hosts', USER_POPULATE)
+    .populate('project_members', USER_POPULATE)
+    .populate('created_by', USER_POPULATE);
 };
 
 export const updateProjectService = async (
@@ -237,10 +229,7 @@ export const updateProjectService = async (
   organizationId: string,
   input: IUpdateProjectInput
 ) => {
-  const project = await Project.findOne({ _id: projectId, organization_id: organizationId });
-  if (!project) {
-    throw ApiError.notFound('Project not found');
-  }
+  const project = await findScopedProject(assertObjectId(projectId, 'id'), organizationId);
 
   const updatedName = input.projectName !== undefined ? input.projectName : input.name;
   if (updatedName !== undefined) project.project_name = updatedName.trim();
@@ -259,10 +248,7 @@ export const updateProjectService = async (
 
   await project.save();
 
-  return await Project.findById(project._id)
-    .populate('project_hosts', 'user_name user_email avatar_url user_role is_super_admin')
-    .populate('project_members', 'user_name user_email avatar_url user_role is_super_admin')
-    .populate('created_by', 'user_name user_email avatar_url user_role is_super_admin');
+  return findPopulatedProject(project._id.toString());
 };
 
 export const deleteProjectService = async (projectId: string, organizationId: string) => {
@@ -277,9 +263,7 @@ export const addProjectMembersService = async (
   organizationId: string,
   input: IAddProjectMembersInput
 ) => {
-  if (!organizationId) {
-    throw ApiError.badRequest('User must belong to an organization to manage project members');
-  }
+  requireOrganizationId(organizationId, 'manage project members');
   assertObjectId(projectId, 'id');
 
   const userIds = Array.isArray(input.userIds) ? input.userIds.filter(Boolean) : [];
@@ -290,21 +274,14 @@ export const addProjectMembersService = async (
   }
 
   const projectRole: ProjectRole = input.projectRole ?? 'Member';
-  if (!['Member', 'Host'].includes(projectRole)) {
-    throw ApiError.badRequest('projectRole must be either Member or Host', [
-      { field: 'projectRole', message: 'Invalid projectRole' }
-    ]);
-  }
+  assertProjectRole(projectRole);
 
-  const project = await Project.findOne({ _id: projectId, organization_id: organizationId });
-  if (!project) {
-    throw ApiError.notFound('Project not found');
-  }
+  const project = await findScopedProject(projectId, organizationId);
 
   await assertProjectMemberUsers(userIds, organizationId);
 
-  const members = new Set(project.project_members.map(toIdString));
-  const hosts = new Set(project.project_hosts.map(toIdString));
+  const members = new Set(project.project_members.map(toObjectIdString));
+  const hosts = new Set(project.project_hosts.map(toObjectIdString));
 
   for (const userId of userIds) {
     members.add(userId);
@@ -334,19 +311,12 @@ export const updateProjectMemberRoleService = async (
   assertObjectId(userId, 'userId');
 
   const projectRole: ProjectRole = input.projectRole;
-  if (!['Member', 'Host'].includes(projectRole)) {
-    throw ApiError.badRequest('projectRole must be either Member or Host', [
-      { field: 'projectRole', message: 'Invalid projectRole' }
-    ]);
-  }
+  assertProjectRole(projectRole);
 
-  const project = await Project.findOne({ _id: projectId, organization_id: organizationId });
-  if (!project) {
-    throw ApiError.notFound('Project not found');
-  }
+  const project = await findScopedProject(projectId, organizationId);
 
-  const members = new Set(project.project_members.map(toIdString));
-  const hosts = new Set(project.project_hosts.map(toIdString));
+  const members = new Set(project.project_members.map(toObjectIdString));
+  const hosts = new Set(project.project_hosts.map(toObjectIdString));
 
   if (!members.has(userId) && !hosts.has(userId)) {
     throw ApiError.notFound('User is not a member of this project');
@@ -378,19 +348,14 @@ export const removeProjectMemberService = async (
   organizationId: string,
   userId: string
 ) => {
-  if (!organizationId) {
-    throw ApiError.badRequest('User must belong to an organization to manage project members');
-  }
+  requireOrganizationId(organizationId, 'manage project members');
   assertObjectId(projectId, 'id');
   assertObjectId(userId, 'userId');
 
-  const project = await Project.findOne({ _id: projectId, organization_id: organizationId });
-  if (!project) {
-    throw ApiError.notFound('Project not found');
-  }
+  const project = await findScopedProject(projectId, organizationId);
 
-  const members = project.project_members.map(toIdString);
-  const hosts = project.project_hosts.map(toIdString);
+  const members = project.project_members.map(toObjectIdString);
+  const hosts = project.project_hosts.map(toObjectIdString);
 
   if (!members.includes(userId) && !hosts.includes(userId)) {
     throw ApiError.notFound('User is not a member of this project');

@@ -6,6 +6,7 @@ interface InviteCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
   inviteCode: string;
+  /** Called after a successful regenerate so the caller can re-read the code. */
   onGenerateNewCode: (newCode: string) => void;
 }
 

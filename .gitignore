@@ -34,3 +34,6 @@ server/doc/
 server/docs/
 server/tests/bruno/
 
+
+# antigravity rules
+.agents/rules/role.local

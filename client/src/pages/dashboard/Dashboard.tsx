@@ -1,64 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Users, ShieldCheck, Clock, UserX } from 'lucide-react';
 import { MembersTable } from '@/components/dashboard/MembersTable';
-import type { Member } from '@/types/member.types';
-import {
-  getOrganizationMembers,
-  getMyOrganization,
-} from '@/api/organization/organization.api';
+import { useOrganization } from '@/context/OrganizationContext';
 
 export const Dashboard: React.FC = () => {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [orgInfo, setOrgInfo] = useState<{ name: string; inviteCode: string }>({
-    name: '',
-    inviteCode: '',
-  });
-  useEffect(() => {
-    let active = true;
-
-    const fetchData = async () => {
-      try {
-        const [orgRes, membersRes] = await Promise.allSettled([
-          getMyOrganization(),
-          getOrganizationMembers(),
-        ]);
-
-        if (!active) return;
-
-        if (orgRes.status === 'fulfilled' && orgRes.value.data?.data) {
-          const org = orgRes.value.data.data;
-          setOrgInfo({
-            name: org.organizationName || org.name || '',
-            inviteCode: org.inviteCode || '',
-          });
-        }
-
-        if (
-          membersRes.status === 'fulfilled' &&
-          Array.isArray(membersRes.value.data?.data)
-        ) {
-          setMembers(membersRes.value.data.data);
-        }
-      } catch (err) {
-        console.warn('Backend endpoint unavailable:', err);
-      }
-    };
-
-    fetchData();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const handleUpdateMember = (updated: Member) => {
-    setMembers((prev) =>
-      prev.map((m) => (m.id === updated.id ? updated : m))
-    );
-  };
-
-  const handleRemoveMember = (id: string) => {
-    setMembers((prev) => prev.filter((m) => m.id !== id));
-  };
+  // Org details and members are loaded once by OrganizationProvider, so this
+  // page no longer refetches them on every mount.
+  const { org, members, replaceMember, removeMember } = useOrganization();
 
   const totalMembers = members.length;
   const activeAdmins = members.filter(
@@ -126,9 +74,9 @@ export const Dashboard: React.FC = () => {
       {/* Main Members Table with TanStack Table */}
       <MembersTable
         initialMembers={members}
-        inviteCode={orgInfo.inviteCode}
-        onUpdateMember={handleUpdateMember}
-        onRemoveMember={handleRemoveMember}
+        inviteCode={org.inviteCode}
+        onUpdateMember={replaceMember}
+        onRemoveMember={removeMember}
       />
     </div>
   );

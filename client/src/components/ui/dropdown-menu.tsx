@@ -98,10 +98,12 @@ function DropdownMenuContent({
   children,
   align = "start",
   side = "bottom",
+  sideOffset = 6,
   ...props
 }: React.ComponentProps<"div"> & {
   align?: "start" | "center" | "end"
   side?: "top" | "right" | "bottom" | "left"
+  /** Gap between the trigger and the panel, in pixels. */
   sideOffset?: number
 }) {
   const { open, setOpen } = React.useContext(DropdownMenuContext)
@@ -135,21 +137,26 @@ function DropdownMenuContent({
     end: "right-0",
   }
 
+  // Positioning is done with utilities, so the offset is applied as an inline
+  // margin rather than a hardcoded Tailwind class.
   const sideClasses = {
-    bottom: "top-full mt-1.5",
-    top: "bottom-full mb-1.5",
-    left: "right-full top-0 mr-1.5",
-    right: "left-full bottom-0 ml-1.5",
+    bottom: "top-full",
+    top: "bottom-full",
+    left: "right-full top-0",
+    right: "left-full top-0",
   }
+
+  const offsetStyle: React.CSSProperties = { margin: `${sideOffset}px` }
 
   return (
     <div
       ref={contentRef}
       data-slot="dropdown-menu-content"
+      style={offsetStyle}
       className={cn(
         "absolute z-50 min-w-48 rounded-lg border border-border bg-card p-1.5 text-card-foreground shadow-2xl animate-in fade-in-0 zoom-in-95",
-        side === "right" ? "left-full top-0 ml-1.5" : sideClasses[side],
-        side !== "right" && side !== "left" ? alignClasses[align] : "",
+        sideClasses[side],
+        side === "top" || side === "bottom" ? alignClasses[align] : "",
         className
       )}
       {...props}

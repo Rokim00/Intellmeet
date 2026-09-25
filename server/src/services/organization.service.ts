@@ -3,7 +3,9 @@ import { User } from '../models/user.model.js';
 import { ApiError } from '../utils/apiError.js';
 import { IVerifyInviteCodeResponse } from '../types/index.js';
 import { generateOrgInviteCode } from '../utils/codeGenerator.js';
-import { getPagination, buildPaginatedResult } from '../utils/pagination.js';
+import { findPaginated } from '../utils/paginatedFind.js';
+import { requireOrganizationId } from '../utils/scope.js';
+import { ORGANIZATION_OWNER_POPULATE, USER_LIST_SELECT } from '../utils/projections.js';
 
 export const verifyInviteCodeService = async (inviteCode: string): Promise<IVerifyInviteCodeResponse> => {
   if (!inviteCode || inviteCode.trim() === '') {
@@ -38,9 +40,7 @@ export const verifyInviteCodeService = async (inviteCode: string): Promise<IVeri
 };
 
 export const regenerateInviteCodeService = async (orgId: string) => {
-  if (!orgId) {
-    throw ApiError.badRequest('User must belong to an organization to regenerate invite code');
-  }
+  requireOrganizationId(orgId, 'regenerate the invite code');
 
   const org = await Organization.findById(orgId);
   if (!org) {
@@ -50,7 +50,6 @@ export const regenerateInviteCodeService = async (orgId: string) => {
   const currentCode = org.organization_invite_code;
   const newInviteCode = generateOrgInviteCode(org.organization_slug);
 
-  // Initialize array if needed and revoke the old code
   if (!org.revoked_invite_codes) {
     org.revoked_invite_codes = [];
   }
@@ -72,13 +71,11 @@ export const regenerateInviteCodeService = async (orgId: string) => {
 };
 
 export const getMyOrganizationService = async (orgId: string) => {
-  if (!orgId) {
-    throw ApiError.badRequest('User does not belong to any organization');
-  }
+  requireOrganizationId(orgId, 'view this organization');
 
   const org = await Organization.findById(orgId).populate(
     'organization_owner_id',
-    'user_name user_email avatar_url user_role is_super_admin created_at updated_at'
+    ORGANIZATION_OWNER_POPULATE
   );
   if (!org) {
     throw ApiError.notFound('Organization not found');
@@ -91,21 +88,10 @@ export const getOrganizationMembersService = async (
   orgId: string,
   query: Record<string, unknown> = {}
 ) => {
-  if (!orgId) {
-    throw ApiError.badRequest('User does not belong to an organization');
-  }
+  requireOrganizationId(orgId, 'view organization members');
 
-  const filter = { organization_id: orgId };
-  const pagination = getPagination(query);
-
-  const [members, total] = await Promise.all([
-    User.find(filter)
-      .select('_id user_name user_email user_role is_super_admin avatar_url created_at updated_at')
-      .sort({ created_at: -1 })
-      .skip(pagination.skip)
-      .limit(pagination.limit),
-    User.countDocuments(filter)
-  ]);
-
-  return buildPaginatedResult(members, total, pagination);
+  return findPaginated(User, { organization_id: orgId }, query, {
+    sort: { created_at: -1 },
+    select: USER_LIST_SELECT
+  });
 };

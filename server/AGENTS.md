@@ -35,12 +35,30 @@ client's `parseApiError()` reads exactly this shape — changing it breaks the U
 Use `asyncHandler` on every async route. Never let a rejected promise reach
 Express unhandled.
 
-## 3. Validation
+## 3. Shared Utilities
+
+These exist so the same logic is not re-declared per service. Use them:
+
+| Helper | Use for |
+| --- | --- |
+| `getRequestScope(req)` | Reading `userId` / `organizationId` from the JWT in a controller |
+| `requireOrganizationId(id, action)` | The guard at the top of every org-scoped service |
+| `findScopedProject` (project.service) | Tenant-scoped project lookup — never `findById` alone |
+| `assertObjectId` / `toObjectIdString` | Validating and normalising Mongo ids |
+| `findPaginated(model, filter, query, opts)` | Any list endpoint: find + count + `meta` envelope |
+| `getPagination` / `buildPaginatedResult` | Paging maths, when you need the pieces directly |
+| `projections.ts` | Every `.select()` / `.populate()` field list — never inline a field string |
+| `config/cookies.ts` | Refresh-token cookie set/clear options |
+| `validateRequired` | Presence checks on an input object |
+
+Adding a second inline copy of any of these is the bug this section exists to prevent.
+
+## 4. Validation
 
 Validate every input at the route or service boundary before it reaches a model.
 Reject unknown fields rather than persisting them.
 
-## 4. Auth and Secrets
+## 5. Auth and Secrets
 
 - Access tokens are short-lived and stateless; refresh tokens rotate and live in
   an `httpOnly`, `sameSite=strict` cookie.
@@ -55,7 +73,7 @@ Reject unknown fields rather than persisting them.
 - Health endpoints expose liveness only — no version strings, no connection
   strings, no hostnames.
 
-## 5. API Documentation
+## 6. API Documentation
 
 Every route carries an `@openapi` JSDoc block with summary, tags, parameters,
 request body, and responses. `/api/docs` is generated from these, so an
@@ -63,7 +81,7 @@ undocumented route is invisible to the client team and to reviewers.
 
 Regenerate the spec with `pnpm openapi` after changing routes.
 
-## 6. Database
+## 7. Database
 
 - One model file per collection. Schemas via Typegoose with explicit types.
 - Indexes must be declared in the schema, not created ad hoc.
@@ -72,7 +90,7 @@ Regenerate the spec with `pnpm openapi` after changing routes.
 - Prefer `lean()` on read-only queries.
 - Populate only the fields the client actually renders.
 
-## 7. Real-Time
+## 8. Real-Time
 
 Socket.io is initialized once in `server.ts` via `initSocket`, and accessed
 through `getIO()`. Never create a second server or import the instance directly.
@@ -82,7 +100,7 @@ Event payloads are typed in `src/types/socket.types.ts` (`ClientToServerEvents`,
 
 Every socket handler authenticates the connection and validates its payload.
 
-## 8. Errors and Logging
+## 9. Errors and Logging
 
 - Throw `ApiError` for expected failures; let unexpected errors reach
   `errorHandler`, which hides internals and returns a generic 500.
@@ -91,25 +109,27 @@ Every socket handler authenticates the connection and validates its payload.
 - Never log tokens, passwords, request bodies containing credentials, or PII
   beyond what the feature needs.
 
-## 9. Shutdown
+## 10. Shutdown
 
 `SIGINT` / `SIGTERM` close the HTTP server, then the DB connection, with a 10s
 forced-exit guard. Keep that intact when adding background work.
 
-## 10. Docker
+## 11. Docker
 
 Secrets arrive as files under `/run/secrets`, never as build args or image
 layers. The image runs as the non-root `node` user and must keep its healthcheck
 on `/api/v1/health`. If you add an outbound dependency, add it as a health-gated
 service in Compose.
 
-## 11. Before You Finish
+## 12. Before You Finish
 
 - [ ] Layering respected; no logic in routes, no queries in controllers
 - [ ] Responses use `ApiResponse`; errors use `ApiError`
 - [ ] Every input validated; every async route wrapped in `asyncHandler`
 - [ ] Protected routes have both `authenticateUser` and `authorizeRoles` as needed
 - [ ] No secret default, no secret logged, no secret in a response
+- [ ] No duplicated guard, projection, pagination, or id-handling logic
+- [ ] Every organization-scoped read filters by `organization_id`
 - [ ] Route documented with `@openapi`; `pnpm openapi` regenerated
 - [ ] New socket events typed in `socket.types.ts`
 - [ ] Graceful shutdown unaffected
