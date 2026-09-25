@@ -164,127 +164,127 @@ export const Signup = () => {
               boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.4)',
             }}
           >
-          {/* Radial Ambient Glow */}
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              opacity: 0.4,
-              background: 'radial-gradient(circle at 65% 40%, rgba(16, 185, 129, 0.35) 0%, transparent 65%)',
-            }}
-          />
-
-          {/* Top Brand Mark */}
-          <Box sx={{ position: 'relative', zIndex: 10 }}>
-            <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-              <IntellMeetLogo size={26} color="#ffffff" />
-              <Typography
-                sx={{
-                  color: '#ffffff',
-                  fontWeight: 700,
-                  fontSize: '1.05rem',
-                  letterSpacing: '-0.025em',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}
-              >
-                IntellMeet
-              </Typography>
-            </Stack>
-          </Box>
-
-          {/* Bottom Hero & Step Indicator Cards */}
-          <Stack spacing={4} sx={{ position: 'relative', zIndex: 10, width: '100%' }}>
-            {/* Header: Title on Left, Subtitle on Right */}
-            <Stack
-              direction={{ xs: 'column', xl: 'row' }}
-              spacing={2}
+            {/* Radial Ambient Glow */}
+            <Box
               sx={{
-                justifyContent: 'space-between',
-                alignItems: { xs: 'flex-start', xl: 'flex-end' },
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                opacity: 0.4,
+                background: 'radial-gradient(circle at 65% 40%, rgba(16, 185, 129, 0.35) 0%, transparent 65%)',
               }}
-            >
-              <Typography
-                component="h1"
-                sx={{
-                  fontSize: { xs: '2rem', xl: '2.5rem' },
-                  fontWeight: 700,
-                  lineHeight: 1.15,
-                  color: '#ffffff',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Get Started<br />with Us
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: '0.875rem',
-                  color: 'rgba(167, 243, 208, 0.75)',
-                  maxWidth: 240,
-                  lineHeight: 1.5,
-                  pb: { xl: 0.5 },
-                }}
-              >
-                Complete these easy steps to register your account.
-              </Typography>
-            </Stack>
+            />
 
-            {/* 3 Step Cards using MUI Grid */}
-            <Grid container spacing={1.75}>
-              {[
-                { n: '1', label: 'Sign up your\naccount', active: true },
-                { n: '2', label: 'Set up your\nworkspace', active: false },
-                { n: '3', label: 'Set up your\nprofile', active: false },
-              ].map((step) => (
-                <Grid key={step.n} size={{ xs: 4 }}>
-                  <Box
-                    sx={{
-                      p: { xs: 1.75, xl: 2 },
-                      height: '100%',
-                      borderRadius: '12px',
-                      transition: 'all 0.2s ease',
-                      border: step.active ? '1px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.1)',
-                      bgcolor: step.active ? '#ffffff' : 'rgba(255, 255, 255, 0.07)',
-                      color: step.active ? '#09090b' : 'rgba(255, 255, 255, 0.8)',
-                      backdropFilter: step.active ? 'none' : 'blur(4px)',
-                      boxShadow: step.active ? '0 10px 25px -5px rgba(0, 0, 0, 0.4)' : 'none',
-                    }}
-                  >
+            {/* Top Brand Mark */}
+            <Box sx={{ position: 'relative', zIndex: 10 }}>
+              <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+                <IntellMeetLogo size={26} color="#ffffff" />
+                <Typography
+                  sx={{
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '1.05rem',
+                    letterSpacing: '-0.025em',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  IntellMeet
+                </Typography>
+              </Stack>
+            </Box>
+
+            {/* Bottom Hero & Step Indicator Cards */}
+            <Stack spacing={4} sx={{ position: 'relative', zIndex: 10, width: '100%' }}>
+              {/* Header: Title on Left, Subtitle on Right */}
+              <Stack
+                direction={{ xs: 'column', xl: 'row' }}
+                spacing={2}
+                sx={{
+                  justifyContent: 'space-between',
+                  alignItems: { xs: 'flex-start', xl: 'flex-end' },
+                }}
+              >
+                <Typography
+                  component="h1"
+                  sx={{
+                    fontSize: { xs: '2rem', xl: '2.5rem' },
+                    fontWeight: 700,
+                    lineHeight: 1.15,
+                    color: '#ffffff',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  Get Started<br />with Us
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '0.875rem',
+                    color: 'rgba(167, 243, 208, 0.75)',
+                    maxWidth: 240,
+                    lineHeight: 1.5,
+                    pb: { xl: 0.5 },
+                  }}
+                >
+                  Complete these easy steps to register your account.
+                </Typography>
+              </Stack>
+
+              {/* 3 Step Cards using MUI Grid */}
+              <Grid container spacing={1.75}>
+                {[
+                  { n: '1', label: 'Sign up your\naccount', active: true },
+                  { n: '2', label: 'Set up your\nworkspace', active: false },
+                  { n: '3', label: 'Set up your\nprofile', active: false },
+                ].map((step) => (
+                  <Grid key={step.n} size={{ xs: 4 }}>
                     <Box
                       sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        mb: 1.5,
-                        bgcolor: step.active ? '#09090b' : 'rgba(255, 255, 255, 0.2)',
-                        color: '#ffffff',
+                        p: { xs: 1.75, xl: 2 },
+                        height: '100%',
+                        borderRadius: '12px',
+                        transition: 'all 0.2s ease',
+                        border: step.active ? '1px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.1)',
+                        bgcolor: step.active ? '#ffffff' : 'rgba(255, 255, 255, 0.07)',
+                        color: step.active ? '#09090b' : 'rgba(255, 255, 255, 0.8)',
+                        backdropFilter: step.active ? 'none' : 'blur(4px)',
+                        boxShadow: step.active ? '0 10px 25px -5px rgba(0, 0, 0, 0.4)' : 'none',
                       }}
                     >
-                      {step.n}
+                      <Box
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          mb: 1.5,
+                          bgcolor: step.active ? '#09090b' : 'rgba(255, 255, 255, 0.2)',
+                          color: '#ffffff',
+                        }}
+                      >
+                        {step.n}
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          lineHeight: 1.35,
+                          whiteSpace: 'pre-line',
+                          color: step.active ? '#09090b' : 'rgba(255, 255, 255, 0.85)',
+                        }}
+                      >
+                        {step.label}
+                      </Typography>
                     </Box>
-                    <Typography
-                      sx={{
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        lineHeight: 1.35,
-                        whiteSpace: 'pre-line',
-                        color: step.active ? '#09090b' : 'rgba(255, 255, 255, 0.85)',
-                      }}
-                    >
-                      {step.label}
-                    </Typography>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Stack>
-        </Box>
-      </Grid>
+                  </Grid>
+                ))}
+              </Grid>
+            </Stack>
+          </Box>
+        </Grid>
 
         {/* ── Right Form Panel (MUI Layout) ── */}
         <Grid

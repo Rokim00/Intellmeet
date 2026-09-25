@@ -53,8 +53,8 @@ export const MembersTable: React.FC<MembersTableProps> = ({
         joinedAt: m.joinedAt
           ? String(m.joinedAt).split('T')[0]
           : m.createdAt
-          ? String(m.createdAt).split('T')[0]
-          : '2026-03-01',
+            ? String(m.createdAt).split('T')[0]
+            : '2026-03-01',
         avatarUrl: m.avatarUrl || '',
       }))
       .filter((member) => {
