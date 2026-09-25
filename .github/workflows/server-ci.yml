@@ -2,14 +2,14 @@ name: Server CI
 
 on:
   push:
-    branches: [main, master, dev, development, aswath]
+    branches: ['**']
     paths:
       - 'server/**'
       - '.github/workflows/server-ci.yml'
       - 'pnpm-workspace.yaml'
       - 'pnpm-lock.yaml'
   pull_request:
-    branches: [main, master, dev, development, aswath]
+    branches: ['**']
     paths:
       - 'server/**'
       - '.github/workflows/server-ci.yml'
