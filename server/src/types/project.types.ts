@@ -4,6 +4,9 @@ import { OrganizationClass } from '../models/organization.model.js';
 
 export type ProjectStatus = 'active' | 'archived' | 'completed';
 
+/** Role scoped to a single project. Does not affect the user's organization-wide `userRole`. */
+export type ProjectRole = 'Member' | 'Host';
+
 export interface IProject {
   _id: string;
   projectId?: string;
@@ -48,3 +51,18 @@ export interface IUpdateProjectInput {
   members?: string[];
   projectMembers?: string[];
 }
+
+export interface IAddProjectMembersInput {
+  userIds: string[];
+  projectRole?: ProjectRole;
+}
+
+export interface IUpdateProjectMemberRoleInput {
+  projectRole: ProjectRole;
+}
+
+export interface IProjectMember {
+  userId: string;
+  projectRole: ProjectRole;
+}
+

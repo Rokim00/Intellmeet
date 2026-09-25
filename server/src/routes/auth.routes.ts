@@ -41,7 +41,7 @@ const router: Router = Router();
  *                 example: SecurePass123!
  *               role:
  *                 type: string
- *                 enum: [Admin, Member]
+ *                 enum: [SuperAdmin, Member]
  *                 example: Member
  *     responses:
  *       201:

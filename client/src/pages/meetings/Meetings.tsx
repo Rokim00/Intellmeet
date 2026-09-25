@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Video, Calendar, Clock, Users, Play, ChevronDown, X } from 'lucide-react';
+import { Video, Calendar, Clock, Users, Play, ChevronDown } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { getProjectName } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -51,11 +51,11 @@ export const Meetings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0c0c0e] text-white p-6 lg:p-8 space-y-6 font-['Plus_Jakarta_Sans']">
+    <div className="w-full bg-background text-foreground p-6 lg:p-8 space-y-6">
       {/* Header Row: Professional Heading & Time Filter in Same Row */}
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-          <Video className="text-emerald-400" size={24} />
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
+          <Video className="text-emerald-500 dark:text-emerald-400" size={24} />
           <span>Meetings</span>
         </h1>
 
@@ -64,7 +64,7 @@ export const Meetings: React.FC = () => {
           <select
             value={timeFilter}
             onChange={(e) => setTimeFilter(e.target.value as 'all' | '1h' | '24h' | '7d' | '30d')}
-            className="appearance-none bg-[#121214] border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 text-xs font-medium rounded-sm pl-3 pr-8 py-2 focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer"
+            className="appearance-none bg-card border border-border text-foreground hover:border-zinc-400 dark:hover:border-zinc-700 text-xs font-medium rounded-md pl-3 pr-10 py-2 focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer"
           >
             <option value="1h">Last 1 Hour</option>
             <option value="24h">Last 24 Hours</option>
@@ -72,10 +72,9 @@ export const Meetings: React.FC = () => {
             <option value="30d">Last 30 Days</option>
             <option value="all">All Time</option>
           </select>
-          <ChevronDown
-            size={14}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
-          />
+          <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-2 pointer-events-none border-l border-emerald-500/30">
+            <ChevronDown size={14} className="text-emerald-600 dark:text-emerald-400" />
+          </div>
         </div>
       </div>
 
@@ -98,41 +97,41 @@ export const Meetings: React.FC = () => {
           {displayedMeetings.map((m) => (
             <div
               key={m.id}
-              className={`rounded-lg border p-5 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+              className={`rounded-md border p-5 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs ${
                 m.projectName === activeProjectName
-                  ? 'border-emerald-500/40 bg-[#141816]'
-                  : 'border-zinc-800/80 bg-[#121214] hover:border-zinc-700'
+                  ? 'border-emerald-500/40 bg-emerald-500/5'
+                  : 'border-border bg-card hover:border-emerald-500/30'
               }`}
             >
               <div className="space-y-1.5 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-sm border border-emerald-500/20">
+                  <span className="text-xs font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-sm border border-emerald-500/20">
                     {m.projectName}
                   </span>
-                  <span className="text-[11px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-sm">
+                  <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-sm">
                     {m.status}
                   </span>
                 </div>
 
-                <h3 className="text-base font-bold text-white">{m.title}</h3>
+                <h3 className="text-base font-bold text-foreground">{m.title}</h3>
 
-                <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 pt-1">
+                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-1">
                   <span className="flex items-center gap-1">
-                    <Calendar size={13} className="text-zinc-500" />
+                    <Calendar size={13} className="text-muted-foreground" />
                     {m.time}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock size={13} className="text-zinc-500" />
+                    <Clock size={13} className="text-muted-foreground" />
                     {m.duration}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Users size={13} className="text-zinc-500" />
+                    <Users size={13} className="text-muted-foreground" />
                     {m.participants} Members
                   </span>
                 </div>
               </div>
 
-              <button className="flex items-center gap-2 rounded-sm bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 px-4 py-2 text-xs font-semibold transition-colors cursor-pointer self-stretch sm:self-auto justify-center">
+              <button className="flex items-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-xs transition-all cursor-pointer self-stretch sm:self-auto justify-center">
                 <Play size={14} fill="currentColor" />
                 <span>Join Room</span>
               </button>
@@ -143,45 +142,45 @@ export const Meetings: React.FC = () => {
 
       {/* Create Meeting Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-[#121214] p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          onClick={() => setCreateModalOpen(false)}
+        >
+          <div 
+            className="w-full max-w-md rounded-md border border-border bg-card p-6 shadow-2xl space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <Video size={18} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white leading-tight">Start Instant Meeting</h3>
-                  <p className="text-xs text-zinc-400">Launch a live video room for your team.</p>
+                  <h3 className="text-base font-bold text-foreground leading-tight">Start Instant Meeting</h3>
+                  <p className="text-xs text-muted-foreground">Launch a live video room for your team.</p>
                 </div>
               </div>
-              <button
-                onClick={() => setCreateModalOpen(false)}
-                className="rounded-sm p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors cursor-pointer"
-              >
-                <X size={16} />
-              </button>
             </div>
 
             <form onSubmit={handleCreateMeeting} className="space-y-4 text-xs">
               <div>
-                <label className="text-zinc-400 font-medium block mb-1.5">Meeting Subject *</label>
+                <label className="text-muted-foreground font-medium block mb-1.5">Meeting Subject *</label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Architecture Sync, Sprint Planning"
-                  className="h-10 w-full rounded-sm border border-zinc-800 bg-[#161618] px-3 text-zinc-100 placeholder:text-zinc-500 focus:border-emerald-500/80 transition-colors"
+                  className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-xs"
                 />
               </div>
 
               <div>
-                <label className="text-zinc-400 font-medium block mb-1.5">Duration</label>
+                <label className="text-muted-foreground font-medium block mb-1.5">Duration</label>
                 <select
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  className="h-10 w-full rounded-sm border border-zinc-800 bg-[#161618] px-3 text-zinc-300 focus:border-emerald-500/80 transition-colors"
+                  className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground focus:border-emerald-500 transition-all cursor-pointer shadow-xs"
                 >
                   <option value="15 mins">15 mins</option>
                   <option value="30 mins">30 mins</option>
@@ -190,17 +189,17 @@ export const Meetings: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/80">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-3.5 py-2 rounded-sm text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  className="px-3.5 py-2 rounded-md text-xs font-medium bg-secondary text-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-sm bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                  className="rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                 >
                   Start Meeting
                 </button>

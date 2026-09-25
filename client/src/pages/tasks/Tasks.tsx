@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckSquare, Clock, AlertCircle, CheckCircle2, User, X } from 'lucide-react';
+import { CheckSquare, Clock, AlertCircle, CheckCircle2, User, ChevronDown } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { getProjectName } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -73,11 +73,11 @@ export const Tasks: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0c0c0e] text-white p-6 lg:p-8 space-y-6 font-['Plus_Jakarta_Sans']">
+    <div className="w-full bg-background text-foreground p-6 lg:p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-          <CheckSquare className="text-emerald-400" size={24} />
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
+          <CheckSquare className="text-emerald-500 dark:text-emerald-400" size={24} />
           <span>Tasks</span>
         </h1>
       </div>
@@ -97,26 +97,26 @@ export const Tasks: React.FC = () => {
           accentColor="emerald"
         />
       ) : (
-        <div className="rounded-lg border border-zinc-800/80 bg-[#121214] overflow-hidden shadow-xl">
-          <div className="p-4 border-b border-zinc-800/80 font-bold text-xs uppercase tracking-wider text-zinc-400 flex items-center justify-between">
+        <div className="rounded-md border border-border bg-card text-card-foreground overflow-hidden shadow-xs">
+          <div className="p-4 border-b border-border font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center justify-between">
             <span>Sprint Backlog & Deliverables</span>
-            <span className="text-emerald-400 font-mono text-[11px]">{displayedTasks.length} Tickets</span>
+            <span className="text-emerald-500 dark:text-emerald-400 font-mono text-[11px]">{displayedTasks.length} Tickets</span>
           </div>
 
-          <div className="divide-y divide-zinc-800/60">
+          <div className="divide-y divide-border">
             {displayedTasks.map((t) => (
               <div
                 key={t.id}
-                className="p-4 hover:bg-zinc-800/30 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                className="p-4 hover:bg-secondary/50 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[11px] text-zinc-500">{t.id}</span>
-                    <span className="text-[11px] font-mono font-semibold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-sm border border-purple-500/20">
+                    <span className="font-mono text-[11px] text-muted-foreground">{t.id}</span>
+                    <span className="text-[11px] font-mono font-semibold text-purple-700 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-sm border border-purple-500/20">
                       {t.projectName}
                     </span>
                   </div>
-                  <h3 className="text-sm font-semibold text-white">{t.title}</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{t.title}</h3>
                 </div>
 
                 <div className="flex items-center gap-3 self-end sm:self-auto">
@@ -128,13 +128,13 @@ export const Tasks: React.FC = () => {
                     {t.priority}
                   </span>
 
-                  <span className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-sm">
+                  <span className="flex items-center gap-1.5 text-xs text-foreground bg-secondary/80 border border-border px-2.5 py-1 rounded-sm">
                     {getStatusIcon(t.status)}
                     <span>{t.status}</span>
                   </span>
 
-                  <div className="flex items-center gap-1 text-xs text-zinc-400 bg-zinc-900 px-2 py-1 rounded-sm border border-zinc-800">
-                    <User size={12} className="text-emerald-400" />
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary/80 px-2 py-1 rounded-sm border border-border">
+                    <User size={12} className="text-emerald-600 dark:text-emerald-400" />
                     <span>{t.assignee}</span>
                   </div>
                 </div>
@@ -146,90 +146,100 @@ export const Tasks: React.FC = () => {
 
       {/* Create Task Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-[#121214] p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          onClick={() => setCreateModalOpen(false)}
+        >
+          <div 
+            className="w-full max-w-md rounded-md border border-border bg-card p-6 shadow-2xl space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <CheckSquare size={18} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white leading-tight">Create New Task</h3>
-                  <p className="text-xs text-zinc-400">Add a ticket or deliverable for your team.</p>
+                  <h3 className="text-base font-bold text-foreground leading-tight">Create New Task</h3>
+                  <p className="text-xs text-muted-foreground">Add a ticket or deliverable for your team.</p>
                 </div>
               </div>
-              <button
-                onClick={() => setCreateModalOpen(false)}
-                className="rounded-sm p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors cursor-pointer"
-              >
-                <X size={16} />
-              </button>
             </div>
 
             <form onSubmit={handleCreateTask} className="space-y-4 text-xs">
               <div>
-                <label className="text-zinc-400 font-medium block mb-1.5">Task Title *</label>
+                <label className="text-muted-foreground font-medium block mb-1.5">Task Title *</label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Implement WebSocket speech stream"
-                  className="h-10 w-full rounded-sm border border-zinc-800 bg-[#161618] px-3 text-zinc-100 placeholder:text-zinc-500 focus:border-emerald-500/80 transition-colors"
+                  className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-xs"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-zinc-400 font-medium block mb-1.5">Priority</label>
-                  <select
-                    value={newPriority}
-                    onChange={(e) => setNewPriority(e.target.value as TaskItem['priority'])}
-                    className="h-10 w-full rounded-sm border border-zinc-800 bg-[#161618] px-3 text-zinc-300 focus:border-emerald-500/80 transition-colors"
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
-                  </select>
+                  <label className="text-muted-foreground font-medium block mb-1.5">Priority</label>
+                  <div className="relative">
+                    <select
+                      value={newPriority}
+                      onChange={(e) => setNewPriority(e.target.value as TaskItem['priority'])}
+                      className="appearance-none h-10 w-full rounded-md border border-border bg-card px-3 pr-10 text-foreground focus:border-emerald-500 transition-all cursor-pointer shadow-xs"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Urgent">Urgent</option>
+                    </select>
+                    <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-2 pointer-events-none border-l border-emerald-500/30">
+                      <ChevronDown size={14} className="text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-zinc-400 font-medium block mb-1.5">Status</label>
-                  <select
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value as TaskItem['status'])}
-                    className="h-10 w-full rounded-sm border border-zinc-800 bg-[#161618] px-3 text-zinc-300 focus:border-emerald-500/80 transition-colors"
-                  >
-                    <option value="To Do">To Do</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Done">Done</option>
-                  </select>
+                  <label className="text-muted-foreground font-medium block mb-1.5">Status</label>
+                  <div className="relative">
+                    <select
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value as TaskItem['status'])}
+                      className="appearance-none h-10 w-full rounded-md border border-border bg-card px-3 pr-10 text-foreground focus:border-emerald-500 transition-all cursor-pointer shadow-xs"
+                    >
+                      <option value="To Do">To Do</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Done">Done</option>
+                    </select>
+                    <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-2 pointer-events-none border-l border-emerald-500/30">
+                      <ChevronDown size={14} className="text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-zinc-400 font-medium block mb-1.5">Assignee</label>
+                <label className="text-muted-foreground font-medium block mb-1.5">Assignee</label>
                 <input
                   type="text"
                   value={newAssignee}
                   onChange={(e) => setNewAssignee(e.target.value)}
                   placeholder="Team member name"
-                  className="h-10 w-full rounded-sm border border-zinc-800 bg-[#161618] px-3 text-zinc-100 placeholder:text-zinc-500 focus:border-emerald-500/80 transition-colors"
+                  className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-xs"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/80">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-3.5 py-2 rounded-sm text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  className="px-3.5 py-2 rounded-md text-xs font-medium bg-secondary text-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-sm bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                  className="rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                 >
                   Create Task
                 </button>

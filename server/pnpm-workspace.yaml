@@ -1,1 +1,9 @@
 # Workspace definition is located at root pnpm-workspace.yaml
+# This file only exists to carry allowBuilds for server-local installs.
+
+packages:
+  - '.'
+
+allowBuilds:
+  '@scarf/scarf': false
+  esbuild: false

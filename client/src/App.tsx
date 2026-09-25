@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProjectProvider } from '@/context/ProjectContext';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { SidebarLayout } from '@/components/layout/SidebarLayout';
 
 const Login = lazy(() => import('@/pages/login/Login').then((m) => ({ default: m.Login })));
@@ -13,7 +15,7 @@ const Tasks = lazy(() => import('@/pages/tasks/Tasks').then((m) => ({ default: m
 const SettingsPage = lazy(() => import('@/pages/settings/Settings').then((m) => ({ default: m.SettingsPage })));
 
 const SuspenseFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-[#0c0c0e] text-zinc-400">
+  <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
     <div className="flex items-center gap-2 text-xs font-medium">
       <div className="h-4 w-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
       <span>Loading...</span>
@@ -25,7 +27,7 @@ const ProtectedRoute = () => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0c0c0e] text-zinc-400">
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
         <div className="flex items-center gap-2 text-xs font-medium">
           <div className="h-4 w-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
           <span>Loading IntellMeet…</span>
@@ -52,41 +54,45 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <BrowserRouter>
-    <AuthProvider>
-      <ProjectProvider>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route
-              path="/login"
-              element={
-                <GuestRoute>
-                  <Login />
-                </GuestRoute>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <GuestRoute>
-                  <Signup />
-                </GuestRoute>
-              }
-            />
+    <ThemeProvider>
+      <AuthProvider>
+        <ProjectProvider>
+          <TooltipProvider>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route
+                  path="/login"
+                  element={
+                    <GuestRoute>
+                      <Login />
+                    </GuestRoute>
+                  }
+                />
+                <Route
+                  path="/signup"
+                  element={
+                    <GuestRoute>
+                      <Signup />
+                    </GuestRoute>
+                  }
+                />
 
-            {/* Protected Dashboard Routes with SidebarLayout */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/meetings" element={<Meetings />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </ProjectProvider >
-    </AuthProvider >
-  </BrowserRouter >
+                {/* Protected Dashboard Routes with SidebarLayout */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/meetings" element={<Meetings />} />
+                  <Route path="/tasks" element={<Tasks />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </TooltipProvider>
+        </ProjectProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </BrowserRouter>
 );
 
 export default App;
