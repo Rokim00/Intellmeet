@@ -28,13 +28,13 @@ export const Login = () => {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     mode: 'onTouched',
-    defaultValues: { email: '', password: '' },
+    defaultValues: { userEmail: '', password: '' },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
     setServerError('');
     try {
-      await login({ email: data.email, password: data.password });
+      await login({ userEmail: data.userEmail, password: data.password });
       navigate('/dashboard');
     } catch (err) {
       const { message, fieldErrors } = parseApiError(err);
@@ -295,24 +295,24 @@ export const Login = () => {
               <form onSubmit={handleSubmit(onSubmit)} noValidate>
                 <Stack spacing={1.75}>
                   <Stack spacing={0.5}>
-                    <Label htmlFor="email" className={labelCls}>
+                    <Label htmlFor="userEmail" className={labelCls}>
                       Email
                     </Label>
                     <Box sx={{ position: 'relative' }}>
                       <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                       <Input
-                        id="email"
+                        id="userEmail"
                         type="email"
                         autoComplete="email"
-                        aria-invalid={!!errors.email}
-                        aria-describedby={errors.email ? 'email-err' : undefined}
+                        aria-invalid={!!errors.userEmail}
+                        aria-describedby={errors.userEmail ? 'userEmail-err' : undefined}
                         className={`${inputCls} pl-10`}
-                        {...register('email')}
+                        {...register('userEmail')}
                       />
                     </Box>
-                    {errors.email && (
-                      <p id="email-err" role="alert" className="text-[11px] leading-tight text-red-500 mt-0.5">
-                        {errors.email.message}
+                    {errors.userEmail && (
+                      <p id="userEmail-err" role="alert" className="text-[11px] leading-tight text-red-500 mt-0.5">
+                        {errors.userEmail.message}
                       </p>
                     )}
                   </Stack>

@@ -26,14 +26,14 @@ const router: Router = Router();
  *           schema:
  *             type: object
  *             required:
- *               - name
- *               - email
+ *               - userName
+ *               - userEmail
  *               - password
  *             properties:
- *               name:
+ *               userName:
  *                 type: string
  *                 example: Alex Morgan
- *               email:
+ *               userEmail:
  *                 type: string
  *                 example: alex@intellmeet.com
  *               password:
@@ -66,10 +66,10 @@ router.post('/signup', asyncHandler(registerUser));
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - userEmail
  *               - password
  *             properties:
- *               email:
+ *               userEmail:
  *                 type: string
  *                 example: alex@intellmeet.com
  *               password:

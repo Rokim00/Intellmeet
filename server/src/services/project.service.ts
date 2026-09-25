@@ -12,6 +12,7 @@ import {
   ProjectRole
 } from '../types/index.js';
 import { generateProjectCode } from '../utils/codeGenerator.js';
+import { getPagination, buildPaginatedResult } from '../utils/pagination.js';
 
 const USER_POPULATE = 'user_name user_email avatar_url user_role is_super_admin';
 const USER_SELECT = '_id user_name user_email avatar_url user_role is_super_admin';
@@ -91,7 +92,11 @@ const findPopulatedProject = async (projectId: string) =>
     .populate('project_members', USER_POPULATE)
     .populate('created_by', USER_POPULATE);
 
-export const getProjectMembersService = async (projectId: string, organizationId: string) => {
+export const getProjectMembersService = async (
+  projectId: string,
+  organizationId: string,
+  query: Record<string, unknown> = {}
+) => {
   if (!organizationId) {
     throw ApiError.badRequest('User must belong to an organization to view project members');
   }
@@ -102,19 +107,26 @@ export const getProjectMembersService = async (projectId: string, organizationId
     throw ApiError.notFound('Project not found');
   }
 
-  const members = buildMemberList(project);
-  const users = await User.find({ _id: { $in: members.map((m) => m.userId) } })
+  const allMembers = buildMemberList(project);
+  const pagination = getPagination(query);
+  const pageMembers = allMembers.slice(pagination.skip, pagination.skip + pagination.limit);
+
+  const users = await User.find({ _id: { $in: pageMembers.map((m) => m.userId) } })
     .select(USER_SELECT)
     .lean();
 
   const userById = new Map(users.map((u) => [u._id.toString(), u]));
 
   return {
+    ...buildPaginatedResult(
+      pageMembers.map((m) => ({ ...m, user: userById.get(m.userId) ?? null })),
+      allMembers.length,
+      pagination
+    ),
     projectId: project._id.toString(),
     projectName: project.project_name,
-    members: members.map((m) => ({ ...m, user: userById.get(m.userId) ?? null })),
-    memberCount: members.length,
-    hostCount: members.filter((m) => m.projectRole === 'Host').length,
+    memberCount: allMembers.length,
+    hostCount: allMembers.filter((m) => m.projectRole === 'Host').length,
     limits: { maxMembers: PROJECT_MEMBER_LIMIT, maxHosts: PROJECT_HOST_LIMIT }
   };
 };
@@ -182,16 +194,29 @@ export const createProjectService = async (
     .populate('created_by', 'user_name user_email avatar_url user_role is_super_admin');
 };
 
-export const getProjectsService = async (organizationId: string) => {
+export const getProjectsService = async (
+  organizationId: string,
+  query: Record<string, unknown> = {}
+) => {
   if (!organizationId) {
     throw ApiError.badRequest('User must belong to an organization to view projects');
   }
 
-  return await Project.find({ organization_id: organizationId, project_status: { $ne: 'archived' } })
-    .populate('project_hosts', 'user_name user_email avatar_url user_role is_super_admin')
-    .populate('project_members', 'user_name user_email avatar_url user_role is_super_admin')
-    .populate('created_by', 'user_name user_email avatar_url user_role is_super_admin')
-    .sort({ createdAt: -1 });
+  const filter = { organization_id: organizationId, project_status: { $ne: 'archived' } };
+  const pagination = getPagination(query);
+
+  const [projects, total] = await Promise.all([
+    Project.find(filter)
+      .populate('project_hosts', USER_POPULATE)
+      .populate('project_members', USER_POPULATE)
+      .populate('created_by', USER_POPULATE)
+      .sort({ created_at: -1 })
+      .skip(pagination.skip)
+      .limit(pagination.limit),
+    Project.countDocuments(filter)
+  ]);
+
+  return buildPaginatedResult(projects, total, pagination);
 };
 
 export const getProjectByIdService = async (projectId: string, organizationId: string) => {

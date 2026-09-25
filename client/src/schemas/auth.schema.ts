@@ -5,7 +5,7 @@ const sanitizedString = (min: number, label: string) =>
   z.string().trim().min(min, `${label} must be at least ${min} characters`);
 
 export const loginSchema = z.object({
-  email: z
+  userEmail: z
     .email('Please enter a valid email address')
     .min(1, 'Email is required')
     .trim()
@@ -15,8 +15,8 @@ export const loginSchema = z.object({
 
 export const signupSchema = z
   .object({
-    name: sanitizedString(2, 'Name').max(60, 'Name is too long'),
-    email: z
+    userName: sanitizedString(2, 'Name').max(60, 'Name is too long'),
+    userEmail: z
       .email('Please enter a valid email address')
       .min(1, 'Email is required')
       .trim()

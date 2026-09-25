@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model.js';
 import { Organization } from '../models/organization.model.js';
 import { ApiError } from '../utils/apiError.js';
-import { validateRequired } from '../utils/validation.js';
 import { env } from '../config/env.js';
 import { generateOrgInviteCode } from '../utils/codeGenerator.js';
+import { validateRequired } from '../utils/validation.js';
 import {
   IUserRegisterInput,
   IUserLoginInput,
@@ -12,22 +12,16 @@ import {
 } from '../types/index.js';
 
 export const registerUserService = async (input: IUserRegisterInput): Promise<IAuthTokensResponse> => {
-  const userName = (input.userName || input.name || '').trim();
-  const userEmail = (input.userEmail || input.email || '').toLowerCase().trim();
-  const password = input.password;
+  validateRequired(input, ['userName', 'userEmail', 'password']);
 
-  if (!userName || !userEmail || !password) {
-    throw ApiError.badRequest('Name, email, and password are required', [
-      { field: 'name', message: 'Name is required' },
-      { field: 'email', message: 'Email is required' },
-      { field: 'password', message: 'Password is required' }
-    ]);
-  }
+  const userName = input.userName.trim();
+  const userEmail = input.userEmail.toLowerCase().trim();
+  const password = input.password;
 
   const existingUser = await User.findOne({ user_email: userEmail });
   if (existingUser) {
     throw ApiError.badRequest('User with this email already exists', [
-      { field: 'email', message: 'User with this email already exists' }
+      { field: 'userEmail', message: 'User with this email already exists' }
     ]);
   }
 
@@ -147,11 +141,12 @@ export const registerUserService = async (input: IUserRegisterInput): Promise<IA
 };
 
 export const loginUserService = async (input: IUserLoginInput): Promise<IAuthTokensResponse & { refreshToken: string }> => {
-  const { email, password } = input;
+  validateRequired(input, ['userEmail', 'password']);
 
-  validateRequired(input, ['email', 'password']);
+  const userEmail = input.userEmail.toLowerCase().trim();
+  const { password } = input;
 
-  const user = await User.findOne({ user_email: email.toLowerCase().trim() }).select('+password +refreshToken');
+  const user = await User.findOne({ user_email: userEmail }).select('+password +refreshToken');
   if (!user) {
     throw ApiError.unauthorized('Invalid email or password');
   }

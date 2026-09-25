@@ -33,7 +33,7 @@ export const getMyOrganization = async (req: Request, res: Response): Promise<Re
 
 export const getOrganizationMembers = async (req: Request, res: Response): Promise<Response> => {
   const orgId = req.user?.organizationId || '';
-  const result = await getOrganizationMembersService(orgId);
+  const result = await getOrganizationMembersService(orgId, req.query as Record<string, unknown>);
 
   return ApiResponse.success(
     res,

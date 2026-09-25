@@ -23,7 +23,7 @@ export const createProject = async (req: Request, res: Response): Promise<Respon
 
 export const getProjects = async (req: Request, res: Response): Promise<Response> => {
   const orgId = req.user?.organizationId || '';
-  const projects = await getProjectsService(orgId);
+  const projects = await getProjectsService(orgId, req.query as Record<string, unknown>);
 
   return ApiResponse.success(res, 'Projects retrieved successfully', projects, 200);
 };
@@ -60,7 +60,7 @@ export const getProjectMembers = async (req: Request, res: Response): Promise<Re
   const orgId = req.user?.organizationId || '';
   const { id } = req.params;
 
-  const result = await getProjectMembersService(id, orgId);
+  const result = await getProjectMembersService(id, orgId, req.query as Record<string, unknown>);
 
   return ApiResponse.success(res, 'Project members retrieved successfully', result, 200);
 };

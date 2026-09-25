@@ -8,6 +8,8 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { ApiResponse } from './utils/apiResponse.js';
 import { corsOptions } from './config/cors.js';
 import { swaggerSpec } from './config/swagger.js';
+import { env } from './config/env.js';
+import { tolerantJsonParser } from './middlewares/tolerantJson.js';
 
 const app: Application = express();
 
@@ -16,7 +18,13 @@ app.use(helmet());
 app.use(cors(corsOptions));
 
 // Body Parsers & Cookie Parser
-app.use(express.json({ limit: '16kb' }));
+// In development we accept comments and trailing commas in JSON bodies so
+// credentials can be toggled in an API client without editing the payload.
+if (env.NODE_ENV === 'production') {
+  app.use(express.json({ limit: '16kb' }));
+} else {
+  app.use(tolerantJsonParser({ limit: '16kb' }));
+}
 app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 app.use(cookieParser());
 
