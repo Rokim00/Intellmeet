@@ -61,29 +61,33 @@ export const Signup = () => {
 
   // Debounced invite code verification
   useEffect(() => {
-    if (isCreatingOrg || !inviteCode || inviteCode.trim().length < 4) {
-      setVerifiedOrg(null);
-      setCodeError('');
-      return;
-    }
-    const t = setTimeout(async () => {
+    const t = setTimeout(() => {
+      if (isCreatingOrg || !inviteCode || inviteCode.trim().length < 4) {
+        setVerifiedOrg(null);
+        setCodeError('');
+        return;
+      }
+
       setVerifyingCode(true);
       setCodeError('');
       setVerifiedOrg(null);
-      try {
-        const { data } = await verifyInviteCode(inviteCode.trim().toUpperCase());
-        if (data?.data?.valid) {
-          setVerifiedOrg(data.data);
-          clearErrors('inviteCode');
-        }
-      } catch (err) {
-        const { message } = parseApiError(err);
-        setCodeError(message);
-        setError('inviteCode', { message });
-      } finally {
-        setVerifyingCode(false);
-      }
+      verifyInviteCode(inviteCode.trim().toUpperCase())
+        .then(({ data }) => {
+          if (data?.data?.valid) {
+            setVerifiedOrg(data.data);
+            clearErrors('inviteCode');
+          }
+        })
+        .catch((err) => {
+          const { message } = parseApiError(err);
+          setCodeError(message);
+          setError('inviteCode', { message });
+        })
+        .finally(() => {
+          setVerifyingCode(false);
+        });
     }, 450);
+
     return () => clearTimeout(t);
   }, [inviteCode, isCreatingOrg, setError, clearErrors]);
 

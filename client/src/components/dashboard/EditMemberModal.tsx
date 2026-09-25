@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { User, Shield, CheckCircle, X } from 'lucide-react';
 import type { Member, MemberRole, MemberStatus } from '@/types/member.types';
 
@@ -15,15 +15,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const [role, setRole] = useState<MemberRole>('Member');
-  const [status, setStatus] = useState<MemberStatus>('Active');
-
-  useEffect(() => {
-    if (member) {
-      setRole(member.role);
-      setStatus(member.status);
-    }
-  }, [member]);
+  const [role, setRole] = useState<MemberRole>(member?.role ?? 'Member');
+  const [status, setStatus] = useState<MemberStatus>(member?.status ?? 'Active');
 
   if (!isOpen || !member) return null;
 

@@ -348,6 +348,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
 
       {/* Edit Modal */}
       <EditMemberModal
+        key={editingMember?.id}
         isOpen={!!editingMember}
         member={editingMember}
         onClose={() => setEditingMember(null)}
