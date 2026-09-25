@@ -1,7 +1,0 @@
-graph TD
-    User([New User lands on App]) --> Choice{What do they want to do?}
-    Choice -->|Create New Workspace| PathA[Option A: Create Organization]
-    Choice -->|Join via Invite Link| PathB[Option B: Join Existing Team]
-
-    PathA --> Role1[User becomes SuperAdmin of Acme Corp]
-    PathB --> Role3[User becomes Member of that Organization]

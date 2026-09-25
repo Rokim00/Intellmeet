@@ -1,8 +1,32 @@
 import React, { useState } from 'react';
-import { Video, Calendar, Clock, Users, Play, ChevronDown } from 'lucide-react';
+import { Video, Calendar, Clock, Users, Play } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { getProjectName } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Modal, ModalFooterCancel } from '@/components/ui/modal';
+import { FormField } from '@/components/ui/form-field';
+import { getMeetingStatusTone } from '@/lib/status-tone';
+
+type TimeFilter = 'all' | '1h' | '24h' | '7d' | '30d';
+
+const TIME_FILTER_OPTIONS = [
+  { value: '1h', label: 'Last 1 Hour' },
+  { value: '24h', label: 'Last 24 Hours' },
+  { value: '7d', label: 'Last 7 Days' },
+  { value: '30d', label: 'Last 30 Days' },
+  { value: 'all', label: 'All Time' },
+];
+
+const DURATION_OPTIONS = [
+  { value: '15 mins', label: '15 mins' },
+  { value: '30 mins', label: '30 mins' },
+  { value: '45 mins', label: '45 mins' },
+  { value: '60 mins', label: '60 mins' },
+];
 
 interface MeetingItem {
   id: string;
@@ -19,16 +43,20 @@ export const Meetings: React.FC = () => {
   const { selectedProject } = useProject();
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [timeFilter, setTimeFilter] = useState<'all' | '1h' | '24h' | '7d' | '30d'>('24h');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('24h');
 
-  // New meeting form state
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState('30 mins');
-  const [time] = useState('Today, 04:00 PM');
 
   const activeProjectName = getProjectName(selectedProject);
 
   const displayedMeetings = meetings;
+
+  const handleCloseModal = () => {
+    setTitle('');
+    setDuration('30 mins');
+    setCreateModalOpen(false);
+  };
 
   const handleCreateMeeting = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +66,7 @@ export const Meetings: React.FC = () => {
       id: `MEET-${Date.now().toString().slice(-4)}`,
       title: title.trim(),
       projectName: activeProjectName,
-      time: time.trim() || 'Today, 04:00 PM',
+      time: 'Today, 04:00 PM',
       duration,
       participants: 1,
       status: 'Live Now',
@@ -46,36 +74,26 @@ export const Meetings: React.FC = () => {
     };
 
     setMeetings((prev) => [newMeeting, ...prev]);
-    setTitle('');
-    setCreateModalOpen(false);
+    handleCloseModal();
   };
 
   return (
     <div className="w-full bg-background text-foreground p-6 lg:p-8 space-y-6">
-      {/* Header Row: Professional Heading & Time Filter in Same Row */}
+      {/* Header Row: Heading & Time Filter */}
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-          <Video className="text-emerald-500 dark:text-emerald-400" size={24} />
+          <Video size={24} className="text-emerald-500 dark:text-emerald-400" />
           <span>Meetings</span>
         </h1>
 
-        {/* Time Filter Dropdown on Right Side of the Same Row */}
-        <div className="relative">
-          <select
-            value={timeFilter}
-            onChange={(e) => setTimeFilter(e.target.value as 'all' | '1h' | '24h' | '7d' | '30d')}
-            className="appearance-none bg-card border border-border text-foreground hover:border-zinc-400 dark:hover:border-zinc-700 text-xs font-medium rounded-md pl-3 pr-10 py-2 focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer"
-          >
-            <option value="1h">Last 1 Hour</option>
-            <option value="24h">Last 24 Hours</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="all">All Time</option>
-          </select>
-          <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-2 pointer-events-none border-l border-emerald-500/30">
-            <ChevronDown size={14} className="text-emerald-600 dark:text-emerald-400" />
-          </div>
-        </div>
+        <Select
+          aria-label="Filter meetings by time"
+          value={timeFilter}
+          onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
+          options={TIME_FILTER_OPTIONS}
+          wrapperClassName="w-auto"
+          className="w-auto pl-3 pr-8 text-xs font-medium"
+        />
       </div>
 
       {/* Content Area */}
@@ -105,12 +123,8 @@ export const Meetings: React.FC = () => {
             >
               <div className="space-y-1.5 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-sm border border-emerald-500/20">
-                    {m.projectName}
-                  </span>
-                  <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-sm">
-                    {m.status}
-                  </span>
+                  <Badge tone="success">{m.projectName}</Badge>
+                  <Badge tone={getMeetingStatusTone(m.status)}>{m.status}</Badge>
                 </div>
 
                 <h3 className="text-base font-bold text-foreground">{m.title}</h3>
@@ -131,83 +145,50 @@ export const Meetings: React.FC = () => {
                 </div>
               </div>
 
-              <button className="flex items-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-xs transition-all cursor-pointer self-stretch sm:self-auto justify-center">
+              <Button className="self-stretch justify-center sm:self-auto">
                 <Play size={14} fill="currentColor" />
                 <span>Join Room</span>
-              </button>
+              </Button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Create Meeting Modal */}
-      {createModalOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
-          onClick={() => setCreateModalOpen(false)}
-        >
-          <div 
-            className="w-full max-w-md rounded-md border border-border bg-card p-6 shadow-2xl space-y-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  <Video size={18} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground leading-tight">Start Instant Meeting</h3>
-                  <p className="text-xs text-muted-foreground">Launch a live video room for your team.</p>
-                </div>
-              </div>
-            </div>
+      <Modal
+        open={createModalOpen}
+        onClose={handleCloseModal}
+        title="Start Instant Meeting"
+        description="Launch a live video room for your team."
+        footer={
+          <>
+            <ModalFooterCancel onClick={handleCloseModal} />
+            <Button type="submit" form="create-meeting-form">
+              Start Meeting
+            </Button>
+          </>
+        }
+      >
+        <form id="create-meeting-form" onSubmit={handleCreateMeeting} className="space-y-4">
+          <FormField label="Meeting Subject" htmlFor="meeting-subject" required>
+            <Input
+              id="meeting-subject"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Architecture Sync, Sprint Planning"
+              required
+            />
+          </FormField>
 
-            <form onSubmit={handleCreateMeeting} className="space-y-4 text-xs">
-              <div>
-                <label className="text-muted-foreground font-medium block mb-1.5">Meeting Subject *</label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Architecture Sync, Sprint Planning"
-                  className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-muted-foreground font-medium block mb-1.5">Duration</label>
-                <select
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground focus:border-emerald-500 transition-all cursor-pointer shadow-xs"
-                >
-                  <option value="15 mins">15 mins</option>
-                  <option value="30 mins">30 mins</option>
-                  <option value="45 mins">45 mins</option>
-                  <option value="60 mins">60 mins</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setCreateModalOpen(false)}
-                  className="px-3.5 py-2 rounded-md text-xs font-medium bg-secondary text-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-                >
-                  Start Meeting
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <FormField label="Duration" htmlFor="meeting-duration">
+            <Select
+              id="meeting-duration"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              options={DURATION_OPTIONS}
+            />
+          </FormField>
+        </form>
+      </Modal>
     </div>
   );
 };

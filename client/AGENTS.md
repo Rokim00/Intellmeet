@@ -1,596 +1,196 @@
-# Client Development Rules
+# Client Rules — IntellMeet
 
-## Scope
+React 19 + TypeScript + Vite + Tailwind v4 UI. Root `AGENTS.md` applies too.
 
-This directory contains the **Intellmeet client application**.
+## 1. Reuse Before Building
 
-Work only within the client unless a task explicitly requires backend changes.
+Search before you create. `src/components/ui/` already has Button, Input, Label,
+Card, Dialog, Sheet, DropdownMenu, Tabs, Table, Sidebar, Breadcrumb, Avatar,
+Tooltip, Skeleton, Separator, EmptyState, and more.
 
-The goal is a **clean, modern, consistent, maintainable UI** without unnecessary abstraction or visual complexity.
+Decision order:
+1. Does it already exist? → Reuse it.
+2. Can an existing component take a prop? → Add the prop.
+3. Is a new variant genuinely needed? → Add **one** variant.
+4. Only then build something new, with one clear responsibility.
 
----
+**Modifying a shared component must not change how existing pages look.** When a
+variant is needed, add it alongside the current one — never edit the base classes
+that current pages depend on. If shared behavior must change, check every
+consumer first.
 
-## 1. Before Changing Code
+No page-local duplicate of an existing shared component.
 
-Before implementing a feature:
+## 2. Actions: One Place
 
-1. Inspect the existing project structure.
-2. Search for existing components that can be reused.
-3. Check existing design tokens and theme variables.
-4. Check existing patterns for:
+The same user action gets **one** control in **one** place. Do not offer
+"Create Project" in both the sidebar and the page header. If a control already
+exists, do not add a second version of it elsewhere.
 
-   * Forms
-   * API calls
-   * Error handling
-   * Loading states
-   * Toasts
-   * Layouts
-5. Follow the existing pattern before introducing a new one.
+Actions belong in the surface where the user is already working. Primary actions
+sit next to the content they affect; destructive actions (delete, remove) belong
+in a row menu or a confirm dialog, never as a bare button beside a primary action.
 
-**Do not create a new component or utility if an appropriate existing one already exists.**
+## 3. Design Tokens Only
 
----
-
-## 2. Design Consistency
-
-The entire application must feel like **one product**.
-
-Maintain consistency in:
-
-* Spacing
-* Typography
-* Border radius
-* Borders
-* Shadows
-* Button styles
-* Input styles
-* Card styles
-* Icons
-* Interactive states
-* Empty states
-* Error states
-* Loading states
-* Toasts
-* Responsive behavior
-
-Do not introduce a new visual pattern for a single page without a real reason.
-
----
-
-## 3. Design Tokens
-
-Use centralized design tokens.
-
-Do not scatter hardcoded colors throughout components.
-
-Prefer semantic tokens such as:
-
-```text
-background
-foreground
-primary
-secondary
-muted
-accent
-border
-input
-ring
-destructive
-```
-
-Use the existing theme/token system before creating new tokens.
-
-Example:
+Semantic tokens, never literal values:
 
 ```tsx
-className="bg-background text-foreground border-border"
+className="bg-background text-foreground border-border text-muted-foreground"
 ```
 
-Avoid:
-
 ```tsx
+// avoid
 className="bg-white text-[#111827] border-[#e5e7eb]"
 ```
 
-unless there is a specific design requirement that cannot be represented by an existing token.
+Tokens live in `src/index.css` under `:root` (light) and `.dark` (dark). The accent
+is emerald. Purple, blue, and amber are **data-status colors only** (live,
+warning, high priority) — never a second brand color.
+
+When a genuinely new semantic value is needed, add the token in **both** themes
+first, then use it. Never introduce a one-off color.
+
+## 4. Shape and Motion
+
+- **Sharp, not soft.** Small radii (`rounded-md`, `rounded-lg`). No
+  `rounded-3xl`, no pill-shaped containers.
+- **Never over-curve corners.** `rounded-full` only on avatars, dots, badges.
+- **Icons carry no background.** A bare Lucide icon at a consistent size and
+  `strokeWidth`. Do not wrap icons in colored boxes or glows.
+- Borders over shadows. Avoid stacked blurs.
+- No background gradients behind content, no ambient glow layers.
+- Transitions 150–200ms, `ease-out`, on color/opacity/transform only.
+- No animation on data that changes often (lists, counters, live status).
+- Respect `prefers-reduced-motion`.
 
 ---
 
-## 4. Theme
+## 5. Types
 
-The application supports:
-
-* Light theme
-* Dark theme
-
-The root theme is the light theme.
-
-Use:
-
-```css
-:root {
-  /* light tokens */
-}
-
-.dark {
-  /* dark tokens */
-}
-```
-
-Every UI component must work correctly in both themes.
-
-Do not create components that only look correct in light mode.
-
-Check:
-
-* Text contrast
-* Borders
-* Inputs
-* Cards
-* Dialogs
-* Dropdowns
-* Toasts
-* Hover states
-* Focus states
-* Disabled states
-
----
-
-## 5. Component Reuse
-
-Use **shadcn/ui** components whenever an appropriate component already exists.
-
-Prefer:
-
-```text
-Button
-Input
-Label
-Card
-Dialog
-Sheet
-DropdownMenu
-Select
-Form
-Table
-Alert
-Toast
-```
-
-over creating custom versions.
-
-Before creating a new shared component:
-
-> Search the existing component library and project first.
-
-Create a custom component only when the existing components cannot reasonably satisfy the requirement.
-
----
+- No `any`. No non-null `!` on API data. No untyped `unknown` casts.
+- Model the API response, not your assumption of it. If a field may be absent,
+  make it optional in the type and handle the missing case in the UI.
+- Use the existing accessors in `src/types/*.types.ts` (`getProjectName`,
+  `getProjectStatus`, …) instead of re-deriving fields inline.
+- Derive prop types from the element (`React.ComponentProps<'...'>`), never by
+  redeclaring them.
 
 ## 6. Component Responsibility
 
-Follow:
+One job per component. A component renders UI and holds view state; it does not
+also call the API, validate forms, and transform data.
 
-> **SRP — Single Responsibility Principle**
+Split only when a file actually gets hard to read — page → feature component →
+form/UI component → hook. Do not pre-emptively abstract simple UI.
 
-Components should have clear responsibilities.
+## 7. API Layer
 
-Avoid large components containing:
+- All requests go through `src/api/client.ts` (Axios). It already attaches the
+  bearer token and handles 401 → refresh → retry. Never call Axios directly or
+  create a second instance.
+- One `<domain>.api.ts` per resource, named exports, no default export.
+- The response envelope is `{ success, message, data, meta?, errors? }`. Type the
+  `data` payload, not the envelope twice.
+- Map errors with `parseApiError()` from `src/utils/apiError.ts` — it already
+  covers network failures, 5xx, and field-level errors.
+- **Verify the endpoint before using it.** Check the route file in `server/` or
+  Swagger at `/api/docs`. Never invent a field or guess a path.
+- Server state belongs in a provider (`AuthContext`, `ProjectContext`); use local
+  component state for everything else.
 
-```text
-UI
-+ API calls
-+ validation
-+ business logic
-+ data transformation
-+ state management
+## 8. Validation
+
+- React Hook Form + Zod, following the existing `src/schemas/` pattern.
+- Validate on submit, re-validate on change after the first failed submit.
+- Reuse the `zodResolver` wiring from `Login.tsx` / `Signup.tsx`.
+- Messages are user-facing and specific. Never surface raw Zod output, stack
+  traces, or Axios errors.
+- Trim and normalize before submit; disable submit while pending.
+- Never use `alert()`, `confirm()`, or a native `prompt()`.
+
+## 9. Feedback and States
+
+Every data-backed view handles four states: **loading** (skeleton matching the
+final layout, not a full-screen spinner), **empty** (`EmptyState`), **error**
+(message + retry), and **success** (mutation confirmation).
+
+Use contextual labels — "Saving…", "Deleting…", "Signing in…" — instead of blocking
+the page. Use the existing toast system; never build a second one, and never
+write "Something went wrong!!!".
+
+## 10. Accessibility
+
+Semantic HTML first; ARIA only when semantics fall short. Every icon-only button
+needs an accessible name, every input a `<Label>`, and every interactive element a
+visible focus ring. Modals and menus must be fully keyboard operable.
+
+## 11. Layout
+
+- `SidebarLayout` owns the page frame; pages render their own content area only.
+- Page structure: header (title + primary action) → toolbar/filters → content.
+- Responsive by default: `flex`/`grid` with `max-width`, no fixed dimensions.
+  Check 375px, 768px, and 1280px.
+- Tables become stacked cards or horizontal scroll on mobile, never squashed into
+  unreadable columns.
+- Keep page padding (`p-6 lg:p-8`) and section spacing consistent everywhere.
+
+## 12. Performance
+
+- Lazy-load routes (already wired in `App.tsx`); keep it that way.
+- `React.memo` / `useMemo` only after a measurable problem, not by default.
+- Avoid effects that only derive state — compute during render instead.
+- Size and lazy-load images; never ship oversized assets.
+
+## 13. File Organization
+
 ```
-
-Separate responsibilities where necessary.
-
-Prefer:
-
-```text
-Page
- ↓
-Feature Component
- ↓
-Form / UI Component
- ↓
-Hook
- ↓
-API Service
-```
-
-Do not over-abstract simple UI.
-
----
-
-## 7. KISS / DRY / YAGNI
-
-### KISS
-
-Keep implementations simple.
-
-Do not introduce unnecessary:
-
-* State management
-* Abstraction layers
-* Wrappers
-* Hooks
-* Utilities
-* Libraries
-
-### DRY
-
-Reuse genuinely shared logic.
-
-Do not duplicate:
-
-* API configuration
-* Validation schemas
-* Theme tokens
-* Common UI patterns
-* Error handling
-
-### YAGNI
-
-Do not build something because it **might** be needed later.
-
-Implement the actual requirement first.
-
----
-
-## 8. User Feedback
-
-Every user action that communicates with the server should provide appropriate feedback.
-
-Examples:
-
-```text
-Submit
-  ↓
-Loading
-  ↓
-Success / Error
-```
-
-Provide feedback for:
-
-* Login
-* Registration
-* Create
-* Update
-* Delete
-* Upload
-* Important settings changes
-* Authentication actions
-
-Use appropriate UI feedback such as:
-
-* Toast
-* Inline error
-* Alert
-* Disabled button
-* Loading indicator
-* Empty state
-
----
-
-## 9. Toasts
-
-Use the existing toast/notification system.
-
-Do not create custom toast implementations for individual pages.
-
-Use consistent messages.
-
-Good:
-
-```text
-"Profile updated successfully."
-"Unable to update profile."
-```
-
-Avoid:
-
-```text
-"Something went wrong!!!"
-```
-
-Do not expose raw server errors, stack traces, Axios errors, or technical implementation details to users.
-
----
-
-## 10. Loading States
-
-Use loading states **only when they provide meaningful feedback**.
-
-Avoid unnecessary loading indicators for:
-
-* Instant local state changes
-* Very small UI operations
-* Components where loading is not perceptible
-
-For real API operations, provide appropriate feedback.
-
-Prefer contextual loading:
-
-```text
-Saving...
-Deleting...
-Signing in...
-```
-
-instead of unnecessarily blocking the entire page.
-
-Do not use a full-screen spinner unless the entire application/page genuinely cannot render without the data.
-
----
-
-## 11. Error States
-
-Errors must be intentional and user-friendly.
-
-Handle:
-
-* Validation errors
-* Authentication errors
-* Authorization errors
-* Network errors
-* Server errors
-* Empty responses
-* Unexpected API responses
-
-Use the application's common API error structure.
-
-Do not duplicate error parsing logic across components.
-
----
-
-## 12. Forms
-
-Use:
-
-* **React Hook Form** for form state
-* **Zod** for validation
-* Existing shadcn form components
-
-Validation should be:
-
-```text
-Input
- ↓
-React Hook Form
- ↓
-Zod
- ↓
-API
- ↓
-Structured API response
-```
-
-Show validation errors close to the relevant field.
-
-Do not duplicate validation rules unnecessarily.
-
----
-
-## 13. API Communication
-
-Use the centralized Axios client.
-
-Do not create individual Axios instances inside components.
-
-Prefer:
-
-```text
-Component
- ↓
-Hook
- ↓
-API service
- ↓
-Axios client
- ↓
-Backend
-```
-
-API configuration, authentication headers, and common error handling should remain centralized.
-
----
-
-## 14. Visual Style
-
-The UI should be:
-
-* Clean
-* Modern
-* Minimal
-* Calm
-* Consistent
-* Functional
-
-Avoid unnecessary:
-
-* Gradients
-* Excessive shadows
-* Excessive animations
-* Decorative elements
-* Huge rounded containers
-* Excessive colors
-* Visual noise
-
-Design should support the product rather than compete with it.
-
----
-
-## 15. Animation
-
-Use animation only when it improves usability.
-
-Good uses:
-
-* Dialog transitions
-* Dropdown transitions
-* Toast appearance
-* Small state transitions
-* Meaningful interaction feedback
-
-Avoid animations that make normal application usage slower or distracting.
-
----
-
-## 16. Accessibility
-
-Follow **A11y** by default.
-
-Ensure:
-
-* Keyboard navigation
-* Visible focus states
-* Proper labels
-* Semantic HTML
-* Accessible buttons
-* Accessible dialogs
-* Appropriate ARIA usage
-* Sufficient color contrast
-
-Do not use visual styling as a replacement for semantic HTML.
-
----
-
-## 17. Responsive Design
-
-The UI must work across:
-
-```text
-Mobile
-Tablet
-Desktop
-```
-
-Use Tailwind responsive utilities.
-
-Avoid unnecessary fixed widths and heights.
-
-Prefer flexible layouts using:
-
-```text
-flex
-grid
-max-width
-min-width
-responsive breakpoints
-```
-
----
-
-## 18. File Organization
-
-Keep the client file system predictable.
-
-Use clear naming conventions.
-
-Example:
-
-```text
 src/
-├── components/
-│   ├── ui/
-│   └── shared/
-│
-├── features/
-│   ├── auth/
-│   ├── dashboard/
-│   └── users/
-│
-├── hooks/
-├── lib/
-├── api/
-├── schemas/
-├── types/
-├── pages/
-└── styles/
+├── api/         # Axios client + per-resource modules
+├── components/  # ui/ primitives, layout/, feature components
+├── context/     # Auth, Project, Theme
+├── hooks/       # shared hooks
+├── lib/         # cn, cva, render helpers
+├── pages/       # one folder per route
+├── schemas/     # Zod schemas
+├── types/       # shared TS types
+└── utils/       # pure helpers
 ```
 
-Organize feature-specific code together when appropriate.
+Feature components go in `components/<feature>/`, not scattered into `ui/`.
+`ui/` holds genuine primitives only.
 
-Avoid dumping unrelated components into a single folder.
+## 14. Naming
+
+Descriptive and consistent: `LoginForm.tsx`, `MembersTable.tsx`, `useProject.ts`,
+`project.api.ts`, `project.types.ts`. Avoid `Comp.tsx`, `Helper.ts`, `Common.ts`,
+`Data.ts`.
+
+## 15. Before You Finish
+
+- [ ] Reused existing components; added at most one variant, and no existing page
+      changed visually
+- [ ] No duplicate UI for an action that already exists elsewhere
+- [ ] Semantic tokens only; verified in light **and** dark
+- [ ] Sharp corners, unboxed icons, no gradients or glows
+- [ ] No `any`; API types match the real endpoint
+- [ ] Loading, empty, error, and success states handled
+- [ ] React Hook Form + Zod on every form
+- [ ] Keyboard accessible with visible focus
+- [ ] Mobile verified
+- [ ] `pnpm build` and `pnpm lint` pass
+- [ ] No unused imports or dead code
+
+## Principle
+
+Build the simplest thing that is **consistent, accessible, and reusable**. Do not
+optimize for lines of code written — optimize for clarity and maintainability.
 
 ---
 
-## 19. Naming
+# Commands
 
-Use descriptive and consistent names.
+See [`commands.md`](./commands.md) at the repository root for every command and
+its purpose.
 
-Examples:
 
-```text
-LoginForm.tsx
-UserTable.tsx
-AuthGuard.tsx
-useAuth.ts
-auth.api.ts
-auth.schema.ts
-user.types.ts
-```
-
-Avoid unclear names such as:
-
-```text
-Comp.tsx
-Helper.ts
-Common.ts
-Data.ts
-Test.tsx
-```
-
----
-
-## 20. Before Creating Anything New
-
-Ask:
-
-```text
-Does this already exist?
-        ↓
-Can I reuse it?
-        ↓
-Can I extend it safely?
-        ↓
-Is a new abstraction actually necessary?
-        ↓
-If yes → create it with a clear responsibility.
-```
-
----
-
-## 21. Final Quality Check
-
-Before considering a feature complete, verify:
-
-* [ ] Existing components were reused where appropriate.
-* [ ] No unnecessary components were created.
-* [ ] Design tokens are used instead of scattered colors.
-* [ ] Light theme works.
-* [ ] Dark theme works.
-* [ ] Responsive layout works.
-* [ ] Loading state is appropriate.
-* [ ] Error state is handled.
-* [ ] Success feedback is provided where appropriate.
-* [ ] Toasts use the common system.
-* [ ] Forms use React Hook Form + Zod.
-* [ ] API calls use the common Axios client.
-* [ ] No duplicated logic was introduced.
-* [ ] No unnecessary abstraction was introduced.
-* [ ] Keyboard/accessibility behavior works.
-* [ ] Code follows existing project conventions.
-
-## Core Principle
-
-> **Build the simplest implementation that is clean, consistent, accessible, reusable, and actually required.**
-
-Do not optimize for the amount of code written.
-
-Optimize for **clarity, consistency, maintainability, and user experience**.

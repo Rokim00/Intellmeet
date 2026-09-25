@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FolderGit2, Users, Video, CheckSquare, Loader2, FolderPlus } from 'lucide-react';
+import { FolderGit2, Users, Video, CheckSquare, FolderPlus } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import {
   getProjectName,
@@ -12,6 +12,9 @@ import {
 } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getProjectStatusTone } from '@/lib/status-tone';
 import { CreateProjectModal } from '@/components/dashboard/CreateProjectModal';
 
 export const Projects: React.FC = () => {
@@ -25,21 +28,6 @@ export const Projects: React.FC = () => {
     const status = getProjectStatus(p);
     return status.toLowerCase() === currentTab.toLowerCase();
   });
-
-  const getStatusBadgeStyle = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      case 'planning':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      case 'completed':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      case 'archived':
-        return 'bg-zinc-800 text-zinc-400 border-zinc-700';
-      default:
-        return 'bg-zinc-800 text-zinc-300 border-zinc-700';
-    }
-  };
 
   const handleProjectCreated = (newProj: Project) => {
     addProject(newProj);
@@ -76,9 +64,10 @@ export const Projects: React.FC = () => {
 
       {/* Projects Content Area */}
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground gap-2 text-xs">
-          <Loader2 size={18} className="animate-spin text-emerald-500 dark:text-emerald-400" />
-          <span>Loading workspace projects…</span>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-44 w-full rounded-md" />
+          ))}
         </div>
       ) : filteredProjects.length === 0 ? (
         /* Empty State Card when no projects exist */
@@ -115,13 +104,7 @@ export const Projects: React.FC = () => {
                     <span className="font-mono text-xs font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-sm">
                       {pCode}
                     </span>
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[11px] font-medium capitalize border ${getStatusBadgeStyle(
-                        pStatus
-                      )}`}
-                    >
-                      {pStatus}
-                    </span>
+                    <Badge tone={getProjectStatusTone(pStatus)}>{pStatus}</Badge>
                   </div>
 
                   <h3 className="text-base font-bold text-foreground leading-snug">{pName}</h3>

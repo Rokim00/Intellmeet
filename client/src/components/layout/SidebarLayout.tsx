@@ -187,9 +187,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
           </div>
         </header>
 
-        {/* Main View Area with Ambient Emerald Depth of Field Lighting */}
+        {/* Main View Area */}
         <main className="relative flex-1 w-full bg-background text-foreground overflow-hidden">
-          <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-72 bg-gradient-to-b from-emerald-500/6 dark:from-emerald-500/10 via-emerald-500/2 to-transparent blur-3xl" />
           <div className="relative z-10">{children}</div>
         </main>
       </SidebarInset>

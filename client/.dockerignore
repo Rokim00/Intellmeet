@@ -5,11 +5,10 @@ dist
 .env
 .env.*
 !.env.example
-secrets
 .agents
 *.log
 npm-debug.log*
 pnpm-debug.log*
 Dockerfile
 docker-compose.yml
-tests
+README.md

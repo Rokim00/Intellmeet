@@ -1,84 +1,95 @@
-# Repository AI Agent Guidelines & Architecture Rules
+# IntellMeet — Agent Guidelines
 
-## 1. Overview & Architecture Boundaries
+Production-grade MERN platform. Two deployables: `client/` (React UI) and
+`server/` (Express API). Rules below apply to both.
 
-This repository consists of two separate sub-projects:
-- **`server/`**: Backend API, database connections, authentication, and core business logic (owned by the Server Lead).
-- **`client/`**: Frontend user interface, client-side state, and UI components.
+## 1. Boundaries
 
-To maintain system stability, prevent breaking changes, and preserve architectural integrity, all AI coding agents (including Antigravity, Cursor, GitHub Copilot, Gemini Code Assist, ChatGPT, Claude, and related tools) must strictly adhere to the rules outlined below.
+- `server/` is owned by the **Server Lead**. Verify via `.agents/role.local`
+  containing `ROLE=server_lead`. That file is git-ignored and never shared.
+- Without that token, treat the session as a **Client / External Contributor**
+  and follow the Limited Tweaks policy in §2.
+- Read the nearest `AGENTS.md` (`client/AGENTS.md`, `server/AGENTS.md`) before
+  touching that directory. Root rules are additive, not a replacement.
 
----
+## 2. Limited Tweaks Policy (non-Server-Lead sessions)
 
-## 2. Server Codebase Protection & Role Verification
+Allowed in `server/`, only when a client feature strictly requires it:
+- Adding optional fields to existing JSON responses
+- Client-facing bug or format fixes
+- Adding CORS origins or optional query parameters
 
-### 2.1 Role Verification Protocol (Local Role Token)
-To verify whether the session is operated by the Server Lead or a Client Developer:
-1. **Verification File**: The AI agent checks for the local file `.agents/role.local`.
-2. **Authorized Role**: The file must exist and contain `ROLE=server_lead`.
-3. **Session Behavior**:
-   - **If `.agents/role.local` is present with `ROLE=server_lead`**: The session is verified as the Server Lead. Full server refactoring and feature development are authorized.
-   - **If `.agents/role.local` is missing or unauthorized**: The session is identified as a Client / External Contributor. The session is subject to the **Limited Small Tweaks Policy** below.
-4. **Git Protection**: `.agents/*.local` is strictly ignored by `.gitignore`. It remains only on the Server Lead's local machine and is never shared via Git.
+Never, under any circumstance:
+- Rename or remove endpoints, query params, or required payload fields
+- Rewrite routing, middleware, controllers, services, or the auth flow
+- Add, rename, or drop collections, Mongoose schemas, or indexes
+- Restructure files or change `server/package.json` dependencies
 
----
+### Commit format for any `server/` tweak from a non-lead session
 
-## 3. Limited Small Tweaks Policy (For Client / Non-Server Sessions)
-
-Client developers and their AI assistants are permitted to make **minor, non-breaking tweaks** in `server/` when strictly necessary to support client features, under these precise conditions:
-
-### 3.1 Allowed Modifications
-- Adding optional fields or properties to existing JSON responses.
-- Minor client-facing bug fixes or formatting adjustments (e.g. date formatting).
-- Adding CORS origins or minor query parameters.
-
-### 3.2 Strictly Forbidden (Zero Breaking Changes)
-AI agents assisting client developers **MUST NOT**:
-1. **Never Break API Contracts**: Do not rename or remove existing endpoints, query params, or required payload fields.
-2. **Never Touch Core Logic or Architecture**: Do not rewrite routing, middleware, controllers, services, or authentication flow.
-3. **Never Alter Database Schemas**: Do not add, rename, or drop MongoDB collections, Mongoose schemas, or DB indexes.
-4. **Never Refactor**: Do not perform automated restructuring, file renaming, or dependency changes in `server/package.json`.
-
----
-
-## 4. Mandatory "Caveman" Git Commit Style for Server Tweaks
-
-Whenever an AI agent or developer makes ANY tweak to `server/` from a client/non-lead session, the Git commit message **MUST** follow the **Caveman format**:
-- Extremely simple, direct, punchy.
-- No corporate jargon, no fluff, no vague summaries.
-- Plainly state **WHAT changed**, **WHY**, and **WHAT IT AFFECTS**.
-
-### Commit Format Template
 ```
-server: <what changed in plain english>
+server: <what changed, plain english>
 why: <short direct reason>
-affects: <exact client component, file, or endpoint affected>
+affects: <exact client file, component, or endpoint>
 ```
 
-### Examples
+Example:
 ```
-server: add avatarUrl to /api/users response
-why: client profile needs user avatar
-affects: client UserProfile.tsx
-```
-
-```
-server: allow GET /api/meetings to accept ?status=upcoming
-why: client needs to filter meetings tab
-affects: client MeetingsList.tsx
+server: add avatarUrl to GET /api/v1/users
+why: client profile needs the user avatar
+affects: client Settings.tsx
 ```
 
-```
-server: fix timestamp format on /api/health
-why: client parsing failed on raw date string
-affects: client HealthCheck.tsx
-```
+## 3. Secrets and Environment
 
----
+- **Never commit** a secret, key, token, connection string, or `.env` file.
+- **Never add a fallback or default value for a secret in code.** If a value is
+  required, require it. `server/src/config/env.ts` resolves secrets from
+  `<NAME>_FILE` (Docker/K8s mount) then `<NAME>` (env var) and exits on a missing
+  value. Do not reintroduce a default, and do not weaken that check.
+- Only non-secret settings may have defaults (port, log level, expiry windows).
+- Never print, log, or return credentials — not in error messages, not in
+  `ApiError`, not in a health endpoint.
+- Use the platform secret manager in CI/CD. Local Docker secrets come from
+  `server/secrets/` (git-ignored), generated by `pnpm secrets:generate`.
+- `.env.example` files hold **empty or placeholder** values only.
 
-## 5. Guidelines for Server Lead AI Sessions
+## 4. Verification
 
-When verified as the Server Lead via `.agents/role.local`:
-- **Smallest Necessary Change**: Make targeted changes to fulfill requirements without collateral modifications.
-- **Preserve Existing Architecture**: Respect project patterns and error handling conventions.
-- **Security & Secrets**: Never expose database credentials, connection strings, JWT secrets, or tokens in logs or code files.
+- Confirm an endpoint exists and its shape before coding against it. Swagger UI
+  is served at `/api/docs`; the OpenAPI JSON is at `/api/docs/json`.
+- Match the response envelope: `{ success, message, data, meta?, errors? }`.
+- Never invent a field the server does not return. If the server must send a new
+  field, that is a §2 server tweak, not a client-side guess.
+- Run `pnpm build` and `pnpm lint` before calling work finished. Report what you
+  could not verify rather than assuming it works.
+
+## 5. Change Discipline
+
+- Smallest change that fully solves the problem. No drive-by refactors, renames,
+  or dependency bumps.
+- Preserve existing architecture and patterns; match surrounding code style.
+- No new dependencies unless explicitly requested.
+- Do not change database schemas or API contracts unless explicitly requested.
+- Comments explain *why*, not *what*. Remove stale comments you touch.
+
+## 6. Current Stack
+
+| Layer | Technology |
+| --- | --- |
+| Client | React 19, TypeScript, Vite, Tailwind CSS v4, React Router 7, RHF + Zod, Axios |
+| Server | Node 22, Express 4, TypeScript, Mongoose 8 (Typegoose), Socket.io 4 |
+| Auth | JWT access + refresh (httpOnly cookie), bcryptjs |
+| Infra | pnpm workspaces, multi-stage Docker, Docker Compose, GitHub Actions |
+
+Pin versions. When adding a dependency, check the current official docs for the
+modern syntax rather than copying older patterns, and confirm it supports the
+Node/React versions above.
+
+## 7. Documentation
+
+- `README.md` — product overview, feature list with honest status, API surface
+- `commands.md` — every command with a one-line explanation
+- Update the relevant doc whenever behavior or commands change.
+- Keep docs accurate. A stale doc is worse than no doc.
+
