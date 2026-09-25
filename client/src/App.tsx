@@ -84,9 +84,9 @@ const App = () => (
             </Route>
           </Routes>
         </Suspense>
-      </ProjectProvider>
-    </AuthProvider>
-  </BrowserRouter>
+      </ProjectProvider >
+    </AuthProvider >
+  </BrowserRouter >
 );
 
 export default App;
