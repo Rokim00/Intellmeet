@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               }
             }
           } else {
-            throw new Error('No new token returned');
+            throw new Error('No new token returned', { cause: err });
           }
         } catch {
           // If refresh also failed, clear session

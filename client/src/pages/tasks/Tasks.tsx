@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { CheckSquare, Plus, Clock, AlertCircle, CheckCircle2, User, Filter, X } from 'lucide-react';
+import { CheckSquare, Clock, AlertCircle, CheckCircle2, User, X } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
-import { getProjectName, getProjectCode } from '@/types/project.types';
+import { getProjectName } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 interface TaskItem {
@@ -15,10 +15,9 @@ interface TaskItem {
 }
 
 export const Tasks: React.FC = () => {
-  const { selectedProject, projects } = useProject();
+  const { selectedProject } = useProject();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [filterActiveProjectOnly, setFilterActiveProjectOnly] = useState(false);
 
   // New task form state
   const [newTitle, setNewTitle] = useState('');
@@ -27,11 +26,8 @@ export const Tasks: React.FC = () => {
   const [newAssignee, setNewAssignee] = useState('arlo');
 
   const activeProjectName = getProjectName(selectedProject);
-  const activeProjectCode = getProjectCode(selectedProject);
 
-  const displayedTasks = filterActiveProjectOnly && selectedProject
-    ? tasks.filter((t) => t.projectName === activeProjectName)
-    : tasks;
+  const displayedTasks = tasks;
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +184,7 @@ export const Tasks: React.FC = () => {
                   <label className="text-zinc-400 font-medium block mb-1.5">Priority</label>
                   <select
                     value={newPriority}
-                    onChange={(e) => setNewPriority(e.target.value as any)}
+                    onChange={(e) => setNewPriority(e.target.value as TaskItem['priority'])}
                     className="h-10 w-full rounded-sm border border-zinc-800 bg-[#161618] px-3 text-zinc-300 focus:border-emerald-500/80 transition-colors"
                   >
                     <option value="Low">Low</option>
@@ -202,7 +198,7 @@ export const Tasks: React.FC = () => {
                   <label className="text-zinc-400 font-medium block mb-1.5">Status</label>
                   <select
                     value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value as any)}
+                    onChange={(e) => setNewStatus(e.target.value as TaskItem['status'])}
                     className="h-10 w-full rounded-sm border border-zinc-800 bg-[#161618] px-3 text-zinc-300 focus:border-emerald-500/80 transition-colors"
                   >
                     <option value="To Do">To Do</option>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, FolderPlus, Loader2 } from 'lucide-react';
 import { createProject } from '@/api/project/project.api';
 import type { Project } from '@/types/project.types';
+import { parseApiError } from '@/utils/apiError';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -45,9 +46,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         setName('');
         setDescription('');
       }
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Failed to create project';
-      setError(msg);
+    } catch (err) {
+      const { message } = parseApiError(err);
+      setError(message);
     } finally {
       setLoading(false);
     }

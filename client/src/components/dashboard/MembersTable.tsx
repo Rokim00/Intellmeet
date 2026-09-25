@@ -17,9 +17,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  Copy,
-  Check,
-  Users,
 } from 'lucide-react';
 import type { Member, MemberRole, MemberStatus } from '@/types/member.types';
 import { EditMemberModal } from './EditMemberModal';
@@ -36,7 +33,6 @@ const columnHelper = createColumnHelper<Member>();
 
 export const MembersTable: React.FC<MembersTableProps> = ({
   initialMembers,
-  inviteCode = 'ACME-4821',
   onUpdateMember,
   onRemoveMember,
 }) => {
@@ -45,12 +41,11 @@ export const MembersTable: React.FC<MembersTableProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [deletingMember, setDeletingMember] = useState<Member | null>(null);
-  const [copied, setCopied] = useState(false);
 
   // Active filter logic & normalization for any backend format (User or Member)
   const filteredData = useMemo(() => {
     return initialMembers
-      .map((m: any) => ({
+      .map((m: Member) => ({
         id: m.id || m._id || m.userId || Math.random().toString(),
         name: m.name || m.userName || m.userEmail || 'Team Member',
         email: m.email || m.userEmail || '',
@@ -74,13 +69,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
       });
   }, [initialMembers, roleFilter, statusFilter, globalFilter]);
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(inviteCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const columns = useMemo<ColumnDef<Member, any>[]>(
+  const columns = useMemo<ColumnDef<Member>[]>(
     () => [
       columnHelper.accessor('name', {
         header: 'Member',

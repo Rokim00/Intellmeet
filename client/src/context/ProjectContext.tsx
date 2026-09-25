@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Project } from '@/types/project.types';
 import { getProjects } from '@/api/project/project.api';
 import { useAuth } from '@/context/AuthContext';
@@ -20,7 +20,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
@@ -52,11 +52,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    // Fetching projects synchronizes external project data with auth state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProjects();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchProjects]);
 
   const addProject = (proj: Project) => {
     setProjects((prev) => [proj, ...prev]);

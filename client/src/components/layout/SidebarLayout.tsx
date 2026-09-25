@@ -10,9 +10,7 @@ import {
   LogOut,
   Ticket,
   Settings as SettingsIcon,
-  Shield,
   Menu,
-  X,
   Building2,
   PanelLeftClose,
   PanelLeftOpen,
@@ -25,7 +23,6 @@ import { maskEmail } from '@/utils/privacy';
 import {
   getProjectName,
   getProjectCode,
-  getProjectDesc,
   getProjectStatus,
   getProjectId,
   type Project,
@@ -48,7 +45,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
   const [projectsMenuOpen, setProjectsMenuOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [inviteCode, setInviteCode] = useState('ARLO-8T966X');
+  const [inviteCode, setInviteCode] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const orgName = 'Acme Corp';

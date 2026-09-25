@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Video, Calendar, Clock, Users, Play, Plus, ChevronDown, X } from 'lucide-react';
+import { Video, Calendar, Clock, Users, Play, ChevronDown, X } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
-import { getProjectName, getProjectCode } from '@/types/project.types';
+import { getProjectName } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 interface MeetingItem {
@@ -24,10 +24,9 @@ export const Meetings: React.FC = () => {
   // New meeting form state
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState('30 mins');
-  const [time, setTime] = useState('Today, 04:00 PM');
+  const [time] = useState('Today, 04:00 PM');
 
   const activeProjectName = getProjectName(selectedProject);
-  const activeProjectCode = getProjectCode(selectedProject);
 
   const displayedMeetings = meetings;
 
@@ -64,7 +63,7 @@ export const Meetings: React.FC = () => {
         <div className="relative">
           <select
             value={timeFilter}
-            onChange={(e) => setTimeFilter(e.target.value as any)}
+            onChange={(e) => setTimeFilter(e.target.value as 'all' | '1h' | '24h' | '7d' | '30d')}
             className="appearance-none bg-[#121214] border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 text-xs font-medium rounded-sm pl-3 pr-8 py-2 focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer"
           >
             <option value="1h">Last 1 Hour</option>

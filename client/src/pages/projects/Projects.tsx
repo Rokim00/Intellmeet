@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FolderGit2, Plus, Users, Video, CheckSquare, Loader2, FolderPlus } from 'lucide-react';
+import { FolderGit2, Users, Video, CheckSquare, Loader2, FolderPlus } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import {
   getProjectName,
@@ -14,7 +14,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CreateProjectModal } from '@/components/dashboard/CreateProjectModal';
 
 export const Projects: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('status') || 'ALL';
   const { projects, loading, addProject, refreshProjects } = useProject();
   const [createModalOpen, setCreateModalOpen] = useState(false);

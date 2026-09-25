@@ -36,16 +36,8 @@ export const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
         onGenerateNewCode(res.data.data.inviteCode);
         setFeedback('New code generated and synced with server!');
       }
-    } catch (err) {
-      // Fallback random code generator if offline
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let randomPart = '';
-      for (let i = 0; i < 6; i++) {
-        randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      const newCode = `INT-${randomPart}`;
-      onGenerateNewCode(newCode);
-      setFeedback('New code generated!');
+    } catch {
+      setFeedback('Unable to generate an invite code. Please try again.');
     } finally {
       setGenerating(false);
       setTimeout(() => setFeedback(''), 3000);

@@ -10,16 +10,13 @@ import {
 export const Dashboard: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [orgInfo, setOrgInfo] = useState<{ name: string; inviteCode: string }>({
-    name: 'Organization',
-    inviteCode: 'ARLO-8T966X',
+    name: '',
+    inviteCode: '',
   });
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     let active = true;
 
     const fetchData = async () => {
-      setLoading(true);
       try {
         const [orgRes, membersRes] = await Promise.allSettled([
           getMyOrganization(),
@@ -31,8 +28,8 @@ export const Dashboard: React.FC = () => {
         if (orgRes.status === 'fulfilled' && orgRes.value.data?.data) {
           const org = orgRes.value.data.data;
           setOrgInfo({
-            name: org.organizationName || org.name || 'Organization',
-            inviteCode: org.inviteCode || 'ARLO-8T966X',
+            name: org.organizationName || org.name || '',
+            inviteCode: org.inviteCode || '',
           });
         }
 
@@ -44,8 +41,6 @@ export const Dashboard: React.FC = () => {
         }
       } catch (err) {
         console.warn('Backend endpoint unavailable:', err);
-      } finally {
-        if (active) setLoading(false);
       }
     };
 
@@ -67,14 +62,10 @@ export const Dashboard: React.FC = () => {
 
   const totalMembers = members.length;
   const activeAdmins = members.filter(
-    (m: any) => (m.role || m.userRole) === 'SuperAdmin' || (m.role || m.userRole) === 'Admin'
+    (m) => m.role === 'SuperAdmin' || m.role === 'Admin'
   ).length;
-  const pendingMembers = members.filter(
-    (m: any) => (m.status || m.userStatus) === 'Pending'
-  ).length;
-  const suspendedMembers = members.filter(
-    (m: any) => (m.status || m.userStatus) === 'Suspended'
-  ).length;
+  const pendingMembers = members.filter((m) => m.status === 'Pending').length;
+  const suspendedMembers = members.filter((m) => m.status === 'Suspended').length;
 
   return (
     <div className="min-h-screen w-full bg-[#0c0c0e] text-white font-['Plus_Jakarta_Sans'] p-6 lg:p-8 space-y-6">
