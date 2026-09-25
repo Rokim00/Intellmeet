@@ -27,8 +27,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 11
+        # Version comes from the `packageManager` field in the root package.json.
+        # Do not pass `version:` here — action-setup errors when both are set.
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

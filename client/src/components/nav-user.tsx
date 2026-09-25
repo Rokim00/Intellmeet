@@ -73,7 +73,7 @@ export function NavUser({
             <ChevronsUpDownIcon className="ml-auto size-4 text-muted-foreground shrink-0 group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-56 mb-2 rounded-md bg-card border border-border text-card-foreground shadow-2xl p-1"
+            className="w-56 rounded-md bg-card border border-border text-card-foreground shadow-2xl p-1"
             side="top"
             align="start"
             sideOffset={8}

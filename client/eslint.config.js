@@ -20,8 +20,17 @@ export default defineConfig([
     },
   },
   {
-    files: ['@/**/*.{ts,tsx}', 'src/context/AuthContext.tsx', 'src/context/ProjectContext.tsx'],
+    files: [
+      '@/**/*.{ts,tsx}',
+      'src/context/AuthContext.tsx',
+      'src/context/ProjectContext.tsx',
+      'src/context/OrganizationContext.tsx',
+    ],
     rules: {
+      // Context files export both a provider component and its consumer hook,
+      // which is the standard pattern. Fast Refresh loses per-file state for
+      // them, but splitting every hook into its own file harms readability more
+      // than the HMR benefit is worth.
       'react-refresh/only-export-components': 'off',
     },
   },

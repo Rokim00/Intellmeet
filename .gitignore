@@ -1,15 +1,39 @@
+# Dependencies
 node_modules/
 client/node_modules/
 server/node_modules/
+
+# Build output
 dist/
 client/dist/
+server/dist/
+
+# Secrets & local env (never commit)
 .env
-server/.env.local
+.env.local
 client/.env
+server/.env
+server/.env.local
 *.env
+!.env.example
+!client/.env.example
+!server/.env.example
+secrets/
+!server/secrets/
+server/secrets/*
+!server/secrets/README.md
+client/secrets/
+
+# Tooling / OS
 .DS_Store
 .agents/*.local
+
+# Generated + scratch
+server/openapi.json
 server/doc/
 server/docs/
 server/tests/bruno/
-server/openapi.json
+
+
+# antigravity rules
+.agents/rules/role.local

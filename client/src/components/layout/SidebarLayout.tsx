@@ -5,6 +5,8 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
+import { useOrganization } from '@/context/OrganizationContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   getProjectName,
   getProjectCode,
@@ -35,23 +37,32 @@ interface SidebarLayoutProps {
 }
 
 export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
-  const { projects, selectedProject, setSelectedProject, addProject, refreshProjects } = useProject();
+  const { projects, selectedProject, setSelectedProject, addProject } = useProject();
+  const { org } = useOrganization();
+  const { refreshProfile } = useAuth();
   const location = useLocation();
 
   // Modals state
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [inviteCode, setInviteCode] = useState('');
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+
+  // Regenerating the invite code changes the organization, which now comes from
+  // the auth user rather than a separate fetch, so the profile must be re-read
+  // for the new code to appear.
+  const handleGenerateNewCode = async () => {
+    await refreshProfile();
+  };
 
   const handleSelectProject = (proj: Project) => {
     setSelectedProject(proj);
     setProjectDropdownOpen(false);
   };
 
+  // `useMutation` invalidates the projects query and `addProject` seeds the
+  // cache, so calling `refreshProjects()` here would just be a second request.
   const handleProjectCreated = (newProj: Project) => {
     addProject(newProj);
-    refreshProjects();
     setCreateModalOpen(false);
   };
 
@@ -187,9 +198,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
           </div>
         </header>
 
-        {/* Main View Area with Ambient Emerald Depth of Field Lighting */}
+        {/* Main View Area */}
         <main className="relative flex-1 w-full bg-background text-foreground overflow-hidden">
-          <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-72 bg-gradient-to-b from-emerald-500/6 dark:from-emerald-500/10 via-emerald-500/2 to-transparent blur-3xl" />
           <div className="relative z-10">{children}</div>
         </main>
       </SidebarInset>
@@ -198,8 +208,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
       <InviteCodeModal
         isOpen={inviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
-        inviteCode={inviteCode}
-        onGenerateNewCode={setInviteCode}
+        inviteCode={org.inviteCode}
+        onGenerateNewCode={handleGenerateNewCode}
       />
 
       {/* Create Project Modal */}

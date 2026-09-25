@@ -1,0 +1,28 @@
+{
+  "name": "intellmeet",
+  "private": true,
+  "version": "1.0.0",
+  "description": "IntellMeet monorepo - API server and web client",
+  "scripts": {
+    "dev": "concurrently -n server,client -c green,cyan \"pnpm -r --filter server dev\" \"pnpm -r --filter client dev\"",
+    "dev:server": "pnpm -r --filter server dev",
+    "dev:client": "pnpm -r --filter client dev",
+    "lint": "pnpm -r lint",
+    "lint:server": "pnpm -r --filter server lint",
+    "lint:client": "pnpm -r --filter client lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "build": "pnpm -r build",
+    "build:server": "pnpm -r --filter server build",
+    "build:client": "pnpm -r --filter client build",
+    "openapi": "pnpm -r --filter server openapi",
+    "secrets:generate": "node server/scripts/generate-secrets.mjs",
+    "docker:up": "pnpm secrets:generate && docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:tools": "pnpm secrets:generate && docker compose --profile tools up --build -d"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "packageManager": "pnpm@11.9.0"
+}

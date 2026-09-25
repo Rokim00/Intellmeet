@@ -5,18 +5,6 @@ import type { Member, MemberRole, MemberStatus } from '@/types/member.types';
 export const verifyInviteCode = (code: string) =>
   client.get<{ data: OrgVerifyResponse }>(`/organizations/invite/${code}`);
 
-export const getMyOrganization = () =>
-  client.get<{
-    data: {
-      organizationId: string;
-      organizationName?: string;
-      name?: string;
-      inviteCode: string;
-      organizationLocation?: string;
-      location?: string;
-    };
-  }>('/organizations/me');
-
 export const getOrganizationMembers = () =>
   client.get<{ data: Member[] }>('/organizations/members');
 

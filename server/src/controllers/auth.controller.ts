@@ -1,25 +1,17 @@
 import { Request, Response } from 'express';
 import { ApiResponse } from '../utils/apiResponse.js';
 import {
+  refreshTokenCookieOptions,
+  clearRefreshTokenCookieOptions
+} from '../config/cookies.js';
+import { getRequestScope } from '../utils/scope.js';
+import {
   registerUserService,
   loginUserService,
   refreshAccessTokenService,
   logoutUserService,
   getCurrentUserService
 } from '../services/auth.service.js';
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-};
-
-const CLEAR_COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const
-};
 
 export const registerUser = async (req: Request, res: Response): Promise<Response> => {
   const result = await registerUserService(req.body);
@@ -35,7 +27,7 @@ export const registerUser = async (req: Request, res: Response): Promise<Respons
 export const loginUser = async (req: Request, res: Response): Promise<Response> => {
   const { user, accessToken, refreshToken } = await loginUserService(req.body);
 
-  res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
+  res.cookie('refreshToken', refreshToken, refreshTokenCookieOptions);
 
   return ApiResponse.success(
     res,
@@ -50,7 +42,7 @@ export const refreshAccessToken = async (req: Request, res: Response): Promise<R
 
   const { accessToken, newRefreshToken } = await refreshAccessTokenService(incomingRefreshToken);
 
-  res.cookie('refreshToken', newRefreshToken, COOKIE_OPTIONS);
+  res.cookie('refreshToken', newRefreshToken, refreshTokenCookieOptions);
 
   return ApiResponse.success(
     res,
@@ -61,17 +53,17 @@ export const refreshAccessToken = async (req: Request, res: Response): Promise<R
 };
 
 export const logoutUser = async (req: Request, res: Response): Promise<Response> => {
-  const userId = req.user?.id || '';
+  const { userId } = getRequestScope(req);
   await logoutUserService(userId);
 
-  res.clearCookie('refreshToken', CLEAR_COOKIE_OPTIONS);
+  res.clearCookie('refreshToken', clearRefreshTokenCookieOptions);
 
   return ApiResponse.success(res, 'Logged out successfully', null, 200);
 };
 
 export const getCurrentUser = async (req: Request, res: Response): Promise<Response> => {
-  const userId = req.user?.id;
-  const user = await getCurrentUserService(userId as string);
+  const { userId } = getRequestScope(req);
+  const user = await getCurrentUserService(userId);
 
   return ApiResponse.success(res, 'Current user profile retrieved', user, 200);
 };

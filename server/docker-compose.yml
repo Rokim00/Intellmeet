@@ -1,5 +1,8 @@
+# ==========================================
+# Server-only stack (API + MongoDB)
+# For the full stack (client + server + Mongo) use the root docker-compose.yml
+# ==========================================
 services:
-  # IntellMeet Backend API Service
   intellmeet-server:
     build:
       context: .
@@ -7,62 +10,86 @@ services:
     container_name: intellmeet-server
     restart: unless-stopped
     ports:
-      - "5001:5000"
+      - "${SERVER_PORT:-5000}:5000"
     environment:
-      - PORT=5000
-      - NODE_ENV=development
-      - CORS_ORIGIN=*
-      - MONGO_URI=mongodb://mongodb-local:27017/intellmeet
-      - AWS_ENDPOINT_URL=http://floci-aws:4566
-      - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_S3_BUCKET=intellmeet-bucket
+      NODE_ENV: production
+      PORT: 5000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://localhost:3000}
+      JWT_ACCESS_EXPIRY: ${JWT_ACCESS_EXPIRY:-15m}
+      JWT_REFRESH_EXPIRY: ${JWT_REFRESH_EXPIRY:-7d}
+      AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL:-http://floci-aws:4566}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-intellmeet-bucket}
+      # Secrets are mounted as files, never passed as env values
+      MONGO_URI_FILE: /run/secrets/mongo_uri
+      JWT_ACCESS_SECRET_FILE: /run/secrets/jwt_access_secret
+      JWT_REFRESH_SECRET_FILE: /run/secrets/jwt_refresh_secret
+    secrets:
+      - mongo_uri
+      - jwt_access_secret
+      - jwt_refresh_secret
     depends_on:
-      - mongodb-local
-      - floci-aws
+      mongodb-local:
+        condition: service_healthy
     networks:
       - intellmeet-network
 
-  # Local MongoDB Database Service
   mongodb-local:
-    image: mongo:latest
+    image: mongo:7
     container_name: intellmeet-mongodb
     restart: unless-stopped
-    ports:
-      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-intellmeet}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-intellmeet_dev_password}
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - intellmeet-network
 
-  # Web UI for MongoDB (Access at http://localhost:8081)
+  # Optional MongoDB web UI -> docker compose --profile tools up
   mongo-express:
-    image: mongo-express:latest
+    image: mongo-express:1
     container_name: intellmeet-mongo-ui
     restart: unless-stopped
+    profiles: ["tools"]
     ports:
-      - "8081:8081"
+      - "${MONGO_EXPRESS_PORT:-8081}:8081"
     environment:
-      - ME_CONFIG_MONGODB_SERVER=mongodb-local
-      - ME_CONFIG_MONGODB_PORT=27017
-      - ME_CONFIG_BASICAUTH=false
+      ME_CONFIG_MONGODB_SERVER: mongodb-local
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER:-intellmeet}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-intellmeet_dev_password}
     depends_on:
-      - mongodb-local
+      mongodb-local:
+        condition: service_healthy
     networks:
       - intellmeet-network
 
-  # Floci - Local AWS Cloud Emulator (S3 / Local Cloud testing)
   floci-aws:
     image: floci/floci:latest
     container_name: intellmeet-floci-aws
     restart: unless-stopped
+    profiles: ["tools"]
     ports:
       - "4566:4566"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - intellmeet-network
+
+secrets:
+  mongo_uri:
+    file: ./secrets/mongo_uri.txt
+  jwt_access_secret:
+    file: ./secrets/jwt_access_secret.txt
+  jwt_refresh_secret:
+    file: ./secrets/jwt_refresh_secret.txt
 
 networks:
   intellmeet-network:
@@ -71,3 +98,4 @@ networks:
 volumes:
   mongo-data:
     driver: local
+

@@ -1,0 +1,107 @@
+# ==========================================
+# IntellMeet — full stack (client + server + MongoDB)
+# Run from the repository root: docker compose up --build
+# ==========================================
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        # Same-origin /api path, proxied by nginx to the server container
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    container_name: intellmeet-client
+    restart: unless-stopped
+    ports:
+      - "${CLIENT_PORT:-3000}:80"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - intellmeet-network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: intellmeet-server
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-5000}:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      JWT_ACCESS_EXPIRY: ${JWT_ACCESS_EXPIRY:-15m}
+      JWT_REFRESH_EXPIRY: ${JWT_REFRESH_EXPIRY:-7d}
+      AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL:-http://localhost:4566}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-intellmeet-bucket}
+      MONGO_URI_FILE: /run/secrets/mongo_uri
+      JWT_ACCESS_SECRET_FILE: /run/secrets/jwt_access_secret
+      JWT_REFRESH_SECRET_FILE: /run/secrets/jwt_refresh_secret
+    secrets:
+      - mongo_uri
+      - jwt_access_secret
+      - jwt_refresh_secret
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - intellmeet-network
+
+  mongodb:
+    image: mongo:7
+    container_name: intellmeet-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-intellmeet}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-intellmeet_dev_password}
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - intellmeet-network
+
+  # Optional dev tooling: docker compose --profile tools up -d
+  mongo-express:
+    image: mongo-express:1
+    container_name: intellmeet-mongo-ui
+    restart: unless-stopped
+    profiles: ["tools"]
+    ports:
+      - "${MONGO_EXPRESS_PORT:-8081}:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER:-intellmeet}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-intellmeet_dev_password}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - intellmeet-network
+
+# Docker-managed file secrets, mounted read-only at /run/secrets/<name>
+secrets:
+  mongo_uri:
+    file: ./server/secrets/mongo_uri.txt
+  jwt_access_secret:
+    file: ./server/secrets/jwt_access_secret.txt
+  jwt_refresh_secret:
+    file: ./server/secrets/jwt_refresh_secret.txt
+
+networks:
+  intellmeet-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local

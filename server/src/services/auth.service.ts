@@ -5,6 +5,7 @@ import { ApiError } from '../utils/apiError.js';
 import { env } from '../config/env.js';
 import { generateOrgInviteCode } from '../utils/codeGenerator.js';
 import { validateRequired } from '../utils/validation.js';
+import { ORGANIZATION_POPULATE } from '../utils/projections.js';
 import {
   IUserRegisterInput,
   IUserLoginInput,
@@ -82,10 +83,7 @@ export const registerUserService = async (input: IUserRegisterInput): Promise<IA
     // 4. Generate accessToken with organizationId included in the payload
     const accessToken = user.generateAccessToken();
 
-    const populatedUser = await User.findById(user._id).populate(
-      'organization_id',
-      'organization_name organization_slug organization_location organization_description organization_invite_code revoked_invite_codes organization_owner_id created_at updated_at'
-    );
+    const populatedUser = await User.findById(user._id).populate('organization_id', ORGANIZATION_POPULATE);
 
     return {
       user: populatedUser!.toJSON() as unknown as IAuthTokensResponse['user'],
@@ -129,10 +127,7 @@ export const registerUserService = async (input: IUserRegisterInput): Promise<IA
   user.refreshToken = refreshToken;
   await user.save();
 
-  const populatedUser = await User.findById(user._id).populate(
-    'organization_id',
-    'organization_name organization_slug organization_location organization_description organization_invite_code revoked_invite_codes organization_owner_id created_at updated_at'
-  );
+  const populatedUser = await User.findById(user._id).populate('organization_id', ORGANIZATION_POPULATE);
 
   return {
     user: populatedUser!.toJSON() as unknown as IAuthTokensResponse['user'],
@@ -162,10 +157,7 @@ export const loginUserService = async (input: IUserLoginInput): Promise<IAuthTok
   user.refreshToken = refreshToken;
   await user.save();
 
-  const populatedUser = await User.findById(user._id).populate(
-    'organization_id',
-    'organization_name organization_slug organization_location organization_description organization_invite_code revoked_invite_codes organization_owner_id created_at updated_at'
-  );
+  const populatedUser = await User.findById(user._id).populate('organization_id', ORGANIZATION_POPULATE);
 
   return {
     user: populatedUser!.toJSON() as unknown as IAuthTokensResponse['user'],
@@ -210,10 +202,7 @@ export const logoutUserService = async (userId: string): Promise<void> => {
 };
 
 export const getCurrentUserService = async (userId: string): Promise<IAuthTokensResponse['user']> => {
-  const user = await User.findById(userId).populate(
-    'organization_id',
-    'organization_name organization_slug organization_location organization_description organization_invite_code revoked_invite_codes organization_owner_id created_at updated_at'
-  );
+  const user = await User.findById(userId).populate('organization_id', ORGANIZATION_POPULATE);
   if (!user) {
     throw ApiError.notFound('User not found');
   }

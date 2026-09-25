@@ -71,10 +71,8 @@ client.interceptors.response.use(
         original.headers.Authorization = `Bearer ${newToken}`;
         return client(original);
       } catch (refreshErr) {
+        // The refresh token is spent or invalid; the session cannot be recovered.
         setAccessToken(null);
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('intellmeet_user');
-        }
         refreshQueue = [];
         return Promise.reject(refreshErr);
       } finally {

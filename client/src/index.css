@@ -108,12 +108,4 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background-image: radial-gradient(rgba(15, 23, 42, 0.07) 1px, transparent 1px);
-  background-size: 22px 22px;
-}
-
-html.dark body,
-.dark body {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 22px 22px;
 }
