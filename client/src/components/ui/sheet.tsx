@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { type RenderableElement } from "@/lib/render"
 import { XIcon } from "lucide-react"
 
 interface SheetContextType {
@@ -69,12 +70,12 @@ function SheetClose({
   className,
   render,
   ...props
-}: React.ComponentProps<"button"> & { render?: React.ReactElement<any> }) {
+}: React.ComponentProps<"button"> & { render?: RenderableElement }) {
   const { setOpen } = React.useContext(SheetContext)
 
   if (render) {
     return React.cloneElement(render, {
-      onClick: (e: any) => {
+      onClick: (e: React.MouseEvent<HTMLElement>) => {
         render.props?.onClick?.(e)
         setOpen(false)
       },

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Video, Calendar, Clock, Users, Play, ChevronDown, X } from 'lucide-react';
+import { Video, Calendar, Clock, Users, Play, ChevronDown } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { getProjectName } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';

@@ -7,15 +7,14 @@ import { maskEmail } from "@/utils/privacy"
 import { IntellMeetLogo } from "@/components/ui/IntellMeetLogo"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { Separator } from "@/components/ui/separator"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-  useSidebar,
 } from "@/components/ui/sidebar"
+import { useSidebar } from "@/components/ui/sidebar-context"
 
 export function AppSidebar({
   onOpenInviteModal,

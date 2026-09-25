@@ -20,7 +20,7 @@ export const IntellMeetLogo: React.FC<IntellMeetLogoProps> = ({
       viewBox="0 0 25.693 25.693"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      style={{ display: 'block', shrink: 0, ...props.style }}
+      style={{ display: 'block', flexShrink: 0, ...props.style }}
       {...props}
     >
       <defs>

@@ -5,9 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export type VariantProps<T extends (...args: any) => any> =
+export type VariantProps<T extends (...args: never[]) => unknown> =
   Omit<
-    T extends (props?: infer P) => any
+    T extends (props?: infer P) => unknown
       ? P extends undefined
         ? Record<string, never>
         : P

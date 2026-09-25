@@ -1,5 +1,11 @@
 import * as React from "react"
 import { cn, cva, type VariantProps } from "@/lib/utils"
+import { type RenderableElement } from "@/lib/render"
+import {
+  SidebarContext,
+  useSidebar,
+  type SidebarContextProps,
+} from "@/components/ui/sidebar-context"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Input } from "@/components/ui/input"
@@ -25,27 +31,6 @@ const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
-
-type SidebarContextProps = {
-  state: "expanded" | "collapsed"
-  open: boolean
-  setOpen: (open: boolean) => void
-  openMobile: boolean
-  setOpenMobile: (open: boolean) => void
-  isMobile: boolean
-  toggleSidebar: () => void
-}
-
-const SidebarContext = React.createContext<SidebarContextProps | null>(null)
-
-function useSidebar() {
-  const context = React.useContext(SidebarContext)
-  if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.")
-  }
-
-  return context
-}
 
 function SidebarProvider({
   defaultOpen = true,
@@ -391,7 +376,7 @@ function SidebarGroupLabel({
   render,
   children,
   ...props
-}: React.ComponentProps<"div"> & { render?: React.ReactElement<any> }) {
+}: React.ComponentProps<"div"> & { render?: RenderableElement }) {
   const mergedClass = cn(
     "flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
     className
@@ -423,7 +408,7 @@ function SidebarGroupAction({
   render,
   children,
   ...props
-}: React.ComponentProps<"button"> & { render?: React.ReactElement<any> }) {
+}: React.ComponentProps<"button"> & { render?: RenderableElement }) {
   const mergedClass = cn(
     "absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden after:absolute after:-inset-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",
     className
@@ -520,12 +505,12 @@ function SidebarMenuButton({
 }: React.ComponentProps<"button"> & {
   isActive?: boolean
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
-  render?: React.ReactElement<any>
+  render?: RenderableElement
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const { isMobile, state } = useSidebar()
   const mergedClass = cn(sidebarMenuButtonVariants({ variant, size }), className)
 
-  let buttonEl = render ? (
+  const buttonEl = render ? (
     React.cloneElement(render, {
       "data-slot": "sidebar-menu-button",
       "data-sidebar": "menu-button",
@@ -574,7 +559,7 @@ function SidebarMenuAction({
   children,
   ...props
 }: React.ComponentProps<"button"> & {
-  render?: React.ReactElement<any>
+  render?: RenderableElement
   showOnHover?: boolean
 }) {
   const mergedClass = cn(
@@ -699,7 +684,7 @@ function SidebarMenuSubButton({
 }: React.ComponentProps<"a"> & {
   size?: "sm" | "md"
   isActive?: boolean
-  render?: React.ReactElement<any>
+  render?: RenderableElement
 }) {
   const mergedClass = cn(
     "flex h-8 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md px-2.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-150 cursor-pointer border-none bg-transparent data-[active=true]:text-emerald-700 dark:data-[active=true]:text-emerald-400 data-[active=true]:font-semibold data-[active=true]:bg-emerald-500/12 dark:data-[active=true]:bg-emerald-500/18",
@@ -755,5 +740,4 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar,
 }

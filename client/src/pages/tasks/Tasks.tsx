@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckSquare, Clock, AlertCircle, CheckCircle2, User, X, ChevronDown } from 'lucide-react';
+import { CheckSquare, Clock, AlertCircle, CheckCircle2, User, ChevronDown } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { getProjectName } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';

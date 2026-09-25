@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { type RenderableElementProps } from "@/lib/render"
 
 interface TooltipContextType {
   open: boolean
@@ -48,22 +49,23 @@ function TooltipTrigger({
   const handleFocus = () => ctx?.setOpen(true)
   const handleBlur = () => ctx?.setOpen(false)
 
-  if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<any>, {
-      onMouseEnter: (e: any) => {
-        (children as any).props?.onMouseEnter?.(e)
+  if (asChild && React.isValidElement<RenderableElementProps>(children)) {
+    const child = children
+    return React.cloneElement(child, {
+      onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+        child.props.onMouseEnter?.(e)
         handleMouseEnter()
       },
-      onMouseLeave: (e: any) => {
-        (children as any).props?.onMouseLeave?.(e)
+      onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+        child.props.onMouseLeave?.(e)
         handleMouseLeave()
       },
-      onFocus: (e: any) => {
-        (children as any).props?.onFocus?.(e)
+      onFocus: (e: React.FocusEvent<HTMLElement>) => {
+        child.props.onFocus?.(e)
         handleFocus()
       },
-      onBlur: (e: any) => {
-        (children as any).props?.onBlur?.(e)
+      onBlur: (e: React.FocusEvent<HTMLElement>) => {
+        child.props.onBlur?.(e)
         handleBlur()
       },
     })
@@ -87,7 +89,6 @@ function TooltipTrigger({
 function TooltipContent({
   className,
   side = "top",
-  align = "center",
   hidden = false,
   children,
   ...props

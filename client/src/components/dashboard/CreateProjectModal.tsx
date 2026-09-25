@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FolderPlus, Loader2 } from 'lucide-react';
+import { FolderPlus, Loader2 } from 'lucide-react';
 import { createProject } from '@/api/project/project.api';
 import type { Project } from '@/types/project.types';
 import { parseApiError } from '@/utils/apiError';

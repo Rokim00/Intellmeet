@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, RefreshCw, X, Shield, Sparkles } from 'lucide-react';
+import { Copy, Check, RefreshCw, Shield, Sparkles } from 'lucide-react';
 import { regenerateInviteCode } from '@/api/organization/organization.api';
 
 interface InviteCodeModalProps {

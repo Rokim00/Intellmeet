@@ -1,4 +1,3 @@
-import * as React from "react"
 import { Link } from "react-router-dom"
 import {
   Avatar,
@@ -17,9 +16,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar"
-import { useTheme } from "@/context/ThemeContext"
+import { useTheme } from "@/context/theme-context"
 import {
   ChevronsUpDownIcon,
   LogOutIcon,
@@ -42,15 +40,14 @@ export function NavUser({
   onOpenInviteModal?: () => void
   onLogout: () => void
 }) {
-  const { isMobile } = useSidebar()
   const { theme, toggleTheme } = useTheme()
   const initials = user.name
     ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .substring(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
     : "U"
 
   return (

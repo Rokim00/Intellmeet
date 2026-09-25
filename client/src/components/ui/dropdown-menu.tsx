@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { type RenderableElement } from "@/lib/render"
 
 interface DropdownMenuContextType {
   open: boolean
@@ -49,19 +50,24 @@ function DropdownMenuTrigger({
   className,
   render,
   ...props
-}: React.ComponentProps<"button"> & { render?: React.ReactElement<any> }) {
+}: React.ComponentProps<"button"> & { render?: RenderableElement }) {
   const { open, setOpen } = React.useContext(DropdownMenuContext)
+
+  const toggleOpen = React.useCallback(() => {
+    setOpen((prev) => !prev)
+  }, [setOpen])
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
-    setOpen((prev) => !prev)
+    toggleOpen()
   }
 
   if (render) {
     return React.cloneElement(render, {
-      onClick: (e: any) => {
+      onClick: (e: React.MouseEvent<HTMLElement>) => {
+        e.stopPropagation()
         render.props?.onClick?.(e)
-        handleClick(e)
+        toggleOpen()
       },
       "aria-expanded": open,
       className: cn("border-none outline-none", render.props?.className, className),
@@ -92,7 +98,6 @@ function DropdownMenuContent({
   children,
   align = "start",
   side = "bottom",
-  sideOffset = 4,
   ...props
 }: React.ComponentProps<"div"> & {
   align?: "start" | "center" | "end"
@@ -178,9 +183,13 @@ function DropdownMenuItem({
   className,
   children,
   onClick,
+  variant,
   render,
   ...props
-}: React.ComponentProps<"button"> & { render?: React.ReactElement<any> }) {
+}: React.ComponentProps<"button"> & {
+  render?: RenderableElement
+  variant?: "default" | "destructive"
+}) {
   const { setOpen } = React.useContext(DropdownMenuContext)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -192,10 +201,12 @@ function DropdownMenuItem({
     return React.cloneElement(render, {
       className: cn(
         "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer select-none",
+        variant === "destructive" &&
+          "text-destructive hover:bg-destructive/10 hover:text-destructive",
         className,
         render.props?.className
       ),
-      onClick: (e: any) => {
+      onClick: (e: React.MouseEvent<HTMLElement>) => {
         render.props?.onClick?.(e)
         setOpen(false)
       },
@@ -209,6 +220,8 @@ function DropdownMenuItem({
       data-slot="dropdown-menu-item"
       className={cn(
         "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-left text-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer select-none",
+        variant === "destructive" &&
+          "text-destructive hover:bg-destructive/10 hover:text-destructive",
         className
       )}
       onClick={handleClick}

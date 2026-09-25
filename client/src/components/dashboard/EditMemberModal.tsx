@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Shield, CheckCircle, X } from 'lucide-react';
+import { User, Shield, CheckCircle } from 'lucide-react';
 import type { Member, MemberRole, MemberStatus } from '@/types/member.types';
 
 interface EditMemberModalProps {

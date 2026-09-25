@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { type RenderableElement } from "@/lib/render"
 
 interface CollapsibleContextType {
   open: boolean
@@ -17,7 +18,6 @@ function Collapsible({
   onOpenChange,
   children,
   className,
-  asChild = false,
   render,
   ...props
 }: React.ComponentProps<"div"> & {
@@ -25,7 +25,7 @@ function Collapsible({
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
   asChild?: boolean
-  render?: React.ReactElement<any>
+  render?: RenderableElement
 }) {
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen)
   const isControlled = controlledOpen !== undefined
@@ -48,7 +48,7 @@ function Collapsible({
         {React.cloneElement(render, {
           "data-slot": "collapsible",
           "data-state": open ? "open" : "closed",
-          className: render.props?.className ? `${className || ""} ${render.props.className}` : className,
+          className: render.props?.className ? cn(className, render.props.className) : className,
           children,
         })}
       </CollapsibleContext.Provider>
@@ -73,15 +73,21 @@ function CollapsibleTrigger({
   children,
   onClick,
   className,
-  asChild = false,
   render,
   ...props
-}: React.ComponentProps<"button"> & { asChild?: boolean; render?: React.ReactElement<any> }) {
+}: React.ComponentProps<"button"> & {
+  asChild?: boolean
+  render?: RenderableElement
+}) {
   const { open, setOpen } = React.useContext(CollapsibleContext)
 
-  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
-    onClick?.(e as any)
+  const toggle = React.useCallback(() => {
     setOpen((prev) => !prev)
+  }, [setOpen])
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e)
+    toggle()
   }
 
   if (render) {
@@ -90,9 +96,9 @@ function CollapsibleTrigger({
       "data-state": open ? "open" : "closed",
       "aria-expanded": open,
       className: cn("border-none outline-none", render.props?.className, className),
-      onClick: (e: any) => {
+      onClick: (e: React.MouseEvent<HTMLElement>) => {
         render.props?.onClick?.(e)
-        handleClick(e)
+        toggle()
       },
       children: children ?? render.props?.children,
     })

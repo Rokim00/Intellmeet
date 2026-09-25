@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   FolderGit2,
   ChevronDown,
-  FolderPlus,
 } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import {
