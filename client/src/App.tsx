@@ -1,46 +1,79 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { Signup } from './pages/Signup';
-import { Login } from './pages/Login'; // <-- Added import
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ProjectProvider } from '@/context/ProjectContext';
+import { Login } from '@/pages/login/Login';
+import { Signup } from '@/pages/signup/Signup';
+import { Dashboard } from '@/pages/dashboard/Dashboard';
+import { Projects } from '@/pages/projects/Projects';
+import { Meetings } from '@/pages/meetings/Meetings';
+import { Tasks } from '@/pages/tasks/Tasks';
+import { SettingsPage } from '@/pages/settings/Settings';
+import { SidebarLayout } from '@/components/layout/SidebarLayout';
 
-// Temporary dummy dashboard to verify successful registration/login redirect
-const TestDashboard = () => {
-  const { user, logout } = useAuth();
-  return (
-    <div className="min-h-screen bg-[#0d0f11] text-white flex flex-col items-center justify-center p-6">
-      <div className="bg-[#14171a] border border-neutral-800 p-8 rounded-2xl max-w-md w-full text-center space-y-4 shadow-2xl">
-        <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-xl font-bold">
-          ✓
+const ProtectedRoute = () => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0c0c0e] text-zinc-400">
+        <div className="flex items-center gap-2 text-xs font-medium">
+          <div className="h-4 w-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+          <span>Loading IntellMeet…</span>
         </div>
-        <h2 className="text-2xl font-bold text-white">Authentication Successful!</h2>
-        <div className="bg-[#1a1d24] p-4 rounded-xl text-left text-sm space-y-2 text-neutral-300">
-          <p><span className="text-neutral-500">Name:</span> {user?.name}</p>
-          <p><span className="text-neutral-500">Email:</span> {user?.email}</p>
-          <p><span className="text-neutral-500">Role:</span> {user?.role}</p>
-          <p><span className="text-neutral-500">User ID:</span> {user?.id || (user as any)?._id}</p>
-        </div>
-        <button
-          onClick={() => logout()}
-          className="w-full py-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg text-sm transition"
-        >
-          Log Out
-        </button>
       </div>
-    </div>
+    );
+  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  return (
+    <SidebarLayout>
+      <Outlet />
+    </SidebarLayout>
   );
 };
 
-export default function App() {
-  return (
+const GuestRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, loading } = useAuth();
+  if (!loading && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+};
+
+const App = () => (
+  <BrowserRouter>
     <AuthProvider>
-      <BrowserRouter>
+      <ProjectProvider>
         <Routes>
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} /> {/* <-- Updated route */}
-          <Route path="/dashboard" element={<TestDashboard />} />
-          <Route path="*" element={<Navigate to="/login" replace />} /> {/* Default fallback to login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route
+            path="/login"
+            element={
+              <GuestRoute>
+                <Login />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <GuestRoute>
+                <Signup />
+              </GuestRoute>
+            }
+          />
+
+          {/* Protected Dashboard Routes with SidebarLayout */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/meetings" element={<Meetings />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
         </Routes>
-      </BrowserRouter>
+      </ProjectProvider>
     </AuthProvider>
-  );
-}
+  </BrowserRouter>
+);
+
+export default App;
