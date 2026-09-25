@@ -1,113 +1,137 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import api, { setAccessToken } from '../services/api';
-import type { User, LoginDTO, SignupDTO, AuthResponse } from '../types/auth';
+import * as authApi from '@/api/auth/auth.api';
+import { setAccessToken, getAccessToken } from '@/api/client';
+import type { User, LoginDTO, SignupDTO } from '@/api/auth/auth.types';
 
-interface AuthContextType {
+interface AuthContextValue {
   user: User | null;
   loading: boolean;
-  login: (credentials: LoginDTO) => Promise<void>;
-  signup: (userData: SignupDTO) => Promise<void>;
-  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  login: (dto: LoginDTO) => Promise<void>;
+  signup: (dto: SignupDTO) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('intellmeet_user');
+        return saved ? JSON.parse(saved) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
 
-  // Restore authenticated session on app initialization
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('intellmeet_user');
+      const token = localStorage.getItem('intellmeet_token');
+      return !(saved && token);
+    }
+    return false;
+  });
+
   useEffect(() => {
-    let isMounted = true;
+    let active = true;
 
     const restoreSession = async () => {
+      const savedToken = getAccessToken();
+
+      if (!savedToken) {
+        if (active) setLoading(false);
+        return;
+      }
+
       try {
-        // 1. Attempt token refresh using the HTTP-only cookie set by backend
-        const refreshResponse = await api.post<{ data: { accessToken: string } }>('/refresh');
-        const token = refreshResponse.data?.data?.accessToken;
-
-        if (token) {
-          setAccessToken(token);
-
-          // 2. Fetch authenticated user profile
-          const userResponse = await api.get<{ data: User }>('/me');
-          if (isMounted) {
-            setUser(userResponse.data?.data || null);
+        // Verify current active token with backend
+        const { data: meData } = await authApi.getMe();
+        if (active && meData?.data) {
+          setUser(meData.data);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('intellmeet_user', JSON.stringify(meData.data));
           }
         }
-      } catch {
-        // If refresh fails (no cookie / expired session), reset state cleanly
-        if (isMounted) {
+      } catch (err) {
+        // If access token expired, try to rotate via refresh-token endpoint
+        try {
+          const { data: refreshData } = await authApi.refreshToken();
+          const token = refreshData?.data?.accessToken;
+          if (token) {
+            setAccessToken(token);
+            const { data: meData } = await authApi.getMe();
+            if (active && meData?.data) {
+              setUser(meData.data);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('intellmeet_user', JSON.stringify(meData.data));
+              }
+            }
+          } else {
+            throw new Error('No new token returned', { cause: err });
+          }
+        } catch {
+          // If refresh also failed, clear session
           setAccessToken(null);
-          setUser(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('intellmeet_user');
+          }
+          if (active) setUser(null);
         }
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     };
 
     restoreSession();
-
     return () => {
-      isMounted = false;
+      active = false;
     };
   }, []);
 
-  const login = async (credentials: LoginDTO): Promise<void> => {
-    const response = await api.post<AuthResponse>('/login', credentials);
-    const { user: loggedInUser, accessToken } = response.data.data;
-    setAccessToken(accessToken);
-    setUser(loggedInUser);
-  };
+  const login = useCallback(async (dto: LoginDTO) => {
+    const { data } = await authApi.login(dto);
+    setAccessToken(data.data.accessToken);
+    setUser(data.data.user);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('intellmeet_user', JSON.stringify(data.data.user));
+    }
+  }, []);
 
-  const signup = async (userData: SignupDTO): Promise<void> => {
-    const response = await api.post<AuthResponse>('/signup', userData);
-    const { user: registeredUser, accessToken } = response.data.data;
-    setAccessToken(accessToken);
-    setUser(registeredUser);
-  };
+  const signup = useCallback(async (dto: SignupDTO) => {
+    const { data } = await authApi.register(dto);
+    setAccessToken(data.data.accessToken);
+    setUser(data.data.user);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('intellmeet_user', JSON.stringify(data.data.user));
+    }
+  }, []);
 
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async () => {
     try {
-      await api.post('/logout');
-    } catch {
-      // Proceed with local client teardown even if server logout fails
+      await authApi.logout();
     } finally {
       setAccessToken(null);
       setUser(null);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('intellmeet_user');
+      }
     }
-  };
+  }, []);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        signup,
-        logout,
-        isAuthenticated: !!user,
-      }}
-    >
-      {loading ? (
-        <div className="min-h-screen bg-black flex items-center justify-center text-white">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-emerald-500"></div>
-        </div>
-      ) : (
-        children
-      )}
+    <AuthContext.Provider value={{ user, loading, isAuthenticated: !!user, login, signup, logout }}>
+      {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+export const useAuth = (): AuthContextValue => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  return ctx;
 };

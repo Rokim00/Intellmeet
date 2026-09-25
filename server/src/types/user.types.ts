@@ -1,6 +1,6 @@
 import { Document, Types } from 'mongoose';
 
-export type UserRole = 'Admin' | 'Member';
+export type UserRole = 'SuperAdmin' | 'Admin' | 'Member';
 
 export interface IUser {
   _id: Types.ObjectId;
@@ -22,11 +22,19 @@ export interface IUserDocument extends Omit<IUser, '_id'>, Document {
 }
 
 export interface IUserRegisterInput {
-  name: string;
-  email: string;
+  name?: string;
+  userName?: string;
+  email?: string;
+  userEmail?: string;
   password: string;
-  role?: UserRole;
+  isCreatingOrg?: boolean;
+  organizationName?: string;
+  organizationLocation?: string;
+  organizationSlug?: string;
+  inviteCode?: string;
   avatarUrl?: string;
+  role?: UserRole;
+  userRole?: UserRole;
 }
 
 export interface IUserLoginInput {
@@ -36,8 +44,13 @@ export interface IUserLoginInput {
 
 export interface IJwtPayload {
   id: string;
+  userId?: string;
   email: string;
+  userEmail?: string;
   role: UserRole;
+  userRole?: UserRole;
+  isSuperAdmin?: boolean;
+  organizationId?: string;
 }
 
 export interface IAuthTokensResponse {
