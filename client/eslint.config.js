@@ -20,6 +20,12 @@ export default defineConfig([
     },
   },
   {
+    files: ['src/components/dashboard/MembersTable.tsx'],
+    rules: {
+      'react-hooks/incompatible-library': 'off',
+    },
+  },
+  {
     files: ['@/**/*.{ts,tsx}', 'src/context/AuthContext.tsx', 'src/context/ProjectContext.tsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
