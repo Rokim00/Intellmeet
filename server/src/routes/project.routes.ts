@@ -86,11 +86,25 @@ router.post('/', authorizeRoles('SuperAdmin'), asyncHandler(createProject));
  * /api/v1/projects:
  *   get:
  *     summary: List Organization Projects
- *     description: Returns all active projects belonging to the authenticated user's organization.
+ *     description: Returns a page of active projects belonging to the authenticated user's organization. Defaults to 10 per page; use `page` and `limit` to page through results.
  *     tags:
  *       - Projects
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
  *     responses:
  *       200:
  *         description: Projects list retrieved
@@ -178,7 +192,7 @@ router.patch('/:id', authorizeRoles('SuperAdmin'), asyncHandler(updateProject));
  * /api/v1/projects/{id}/members:
  *   get:
  *     summary: List Project Members
- *     description: Returns every member of the project with their project-scoped role (`Host` or `Member`), plus roster counts and the enforced caps (max 50 members, max 3 hosts).
+ *     description: Returns a page of every member of the project with their project-scoped role (`Host` or `Member`), plus roster counts and the enforced caps (max 50 members, max 3 hosts). Defaults to 10 per page; use `page` and `limit` to page through results.
  *     tags:
  *       - Projects
  *     security:
@@ -189,6 +203,19 @@ router.patch('/:id', authorizeRoles('SuperAdmin'), asyncHandler(updateProject));
  *         required: true
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
  *     responses:
  *       200:
  *         description: Project members retrieved successfully

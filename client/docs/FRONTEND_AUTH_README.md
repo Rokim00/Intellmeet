@@ -31,10 +31,8 @@ export interface User {
 
 // Inputs (DTOs)
 export interface SignupDTO {
-  name?: string;
-  userName?: string;
-  email?: string;
-  userEmail?: string;
+  userName: string;
+  userEmail: string;
   password: string;
   isCreatingOrg?: boolean;
   organizationName?: string;
@@ -44,13 +42,13 @@ export interface SignupDTO {
 }
 
 export interface LoginDTO {
-  email: string;
+  userEmail: string;
   password: string;
 }
 ```
 
-The server accepts **both** `name`/`userName` and `email`/`userEmail` aliases and prefers
-the long form. Send the long form.
+> `userName` / `userEmail` are the only accepted names. The old short aliases
+> (`name` / `email`) were **removed** — the server rejects them.
 
 ### Project member types (new — required by this feature)
 
@@ -175,14 +173,39 @@ export interface CreateProjectDTO {
 It is `true` only for org creators, and it is redundant with `role === 'SuperAdmin'`.
 Check `role`. Read `is_super_admin` for display at most.
 
+### 1b.6 Use `userName` / `userEmail` only
+
+The short aliases were removed. Sending `name` or `email` no longer works.
+
+```diff
+ export interface SignupDTO {
+-  name: string;
+-  userName: string;
+-  email: string;
+-  userEmail: string;
++  userName: string;
++  userEmail: string;
+   password: string;
+ }
+
+ export interface LoginDTO {
+-  email: string;
++  userEmail: string;
+   password: string;
+ }
+```
+
+Server validation errors now report `field: "userName"` / `field: "userEmail"`, so any
+`errors[].field` → input mapping must use the long names.
+
 ---
 
 ## 2. Routes — Auth
 
 | Endpoint | Method | Body | Auth | Returns |
 | :--- | :--- | :--- | :--- | :--- |
-| `/auth/signup` | `POST` | `SignupDTO` | ❌ | `{ user, accessToken }` |
-| `/auth/login` | `POST` | `LoginDTO` | ❌ | `{ user, accessToken }` |
+| `/auth/signup` | `POST` | `{ userName, userEmail, password, ... }` | ❌ | `{ user, accessToken }` |
+| `/auth/login` | `POST` | `{ userEmail, password }` | ❌ | `{ user, accessToken }` |
 | `/auth/me` | `GET` | — | `Bearer` | `User` |
 | `/auth/refresh-token` | `POST` | `{}` or cookie | ❌ | `{ accessToken }` |
 | `/auth/logout` | `POST` | — | `Bearer` | `200 OK` |
@@ -395,6 +418,252 @@ Request: `{ "projectRole": "Host" }`
 
 ---
 
+## 3c. Pagination (all list endpoints)
+
+Every list endpoint is paginated. Defaults to **10** per page.
+
+| Endpoint | Params |
+| :--- | :--- |
+| `GET /projects` | `?page=&limit=` |
+| `GET /projects/{id}/members` | `?page=&limit=` |
+| `GET /organizations/members` | `?page=&limit=` |
+
+`page` starts at 1. `limit` defaults to 10 and is **capped at 100**. Malformed values
+(`?page=abc`, `?page=0`, negative) silently fall back to defaults — they never error.
+
+### ⚠️ Response shape changed
+
+List endpoints no longer return a bare array. `data` is now an object:
+
+```typescript
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  pagination: PaginationMeta;
+}
+```
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Projects retrieved successfully",
+  "data": {
+    "items": [ { "projectId": "…", "projectName": "Mobile App v2" } ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "totalPages": 3,
+      "hasNextPage": true,
+      "hasPreviousPage": false
+    }
+  }
+}
+```
+
+**Update every caller:** `data` is now `data.items`, not an array. Code doing
+`data.map(...)` breaks and must become `data.items.map(...)`.
+
+`GET /projects/{id}/members` returns the paginated shape **plus** the existing fields:
+
+```json
+{
+  "data": {
+    "items": [ { "userId": "…", "projectRole": "Host", "user": { } } ],
+    "pagination": { "page": 1, "limit": 10, "total": 12, "totalPages": 2, "hasNextPage": true, "hasPreviousPage": false },
+    "projectId": "…",
+    "projectName": "Mobile App v2",
+    "memberCount": 12,
+    "hostCount": 2,
+    "limits": { "maxMembers": 50, "maxHosts": 3 }
+  }
+}
+```
+
+`memberCount` / `hostCount` are **totals across all pages**, not page counts — use them
+for the `12/50` counter even while viewing page 2.
+
+### Shared pagination component — do not build one per page
+
+Page state is UI state, not per-page logic. One reusable component, driven by
+`pagination` from the response:
+
+```tsx
+// src/components/shared/PaginationControls.tsx
+interface Props {
+  pagination: PaginationMeta;
+  onPageChange: (page: number) => void;
+  onLimitChange?: (limit: number) => void;
+}
+
+export const PaginationControls = ({ pagination, onPageChange, onLimitChange }: Props) => (
+  <div className="flex items-center justify-between gap-4">
+    <p className="text-sm text-muted-foreground">
+      Page {pagination.page} of {pagination.totalPages} · {pagination.total} total
+    </p>
+    <div className="flex items-center gap-2">
+      {onLimitChange && (
+        <Select value={String(pagination.limit)} onValueChange={(v) => onLimitChange(Number(v))}>
+          {/* options: 10, 25, 50, 100 */}
+        </Select>
+      )}
+      <Button variant="outline" size="sm" disabled={!pagination.hasPreviousPage}
+        onClick={() => onPageChange(pagination.page - 1)}>Previous</Button>
+      <Button variant="outline" size="sm" disabled={!pagination.hasNextPage}
+        onClick={() => onPageChange(pagination.page + 1)}>Next</Button>
+    </div>
+  </div>
+);
+```
+
+Rules:
+- **Never hardcode** `10`, `50`, or `100` in a component. The default page size and the
+  project limits (`maxMembers` / `maxHosts`) come from the API — read them, don't assume.
+- Keep page/limit in component state or the URL query string. **Reset `page` to 1** when
+  the filter or org changes, or you land on an empty page.
+- The component renders `disabled` from `hasNextPage` / `hasPreviousPage` — don't compute
+  those yourself.
+
+---
+
+## 3d. Data fetching — TanStack Query
+
+### ⚠️ Not installed yet
+
+`package.json` has `@tanstack/react-table` but **not** `@tanstack/react-query`. Install it
+before using anything below:
+
+```bash
+pnpm add @tanstack/react-query
+```
+
+### Central QueryClient — do not create one per component
+
+`src/lib/queryClient.ts`, created once:
+
+```ts
+import { QueryClient } from '@tanstack/react-query';
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+      refetchOnReconnect: true,
+    },
+  },
+});
+```
+
+Mount once in `main.tsx`:
+```tsx
+<QueryClientProvider client={queryClient}>
+  <App />
+</QueryClientProvider>
+```
+
+### Staleness rules — pick per query, not globally
+
+| Data | `staleTime` | `refetchOnWindowFocus` | Why |
+| :--- | :--- | :--- | :--- |
+| Projects list, Org members | `30_000` | `false` | Changes rarely; focus-refetch reorders the list under the user's cursor |
+| Project members table | `15_000` | `false` | Roster changes from other screens |
+| Current user (`/auth/me`) | `5 * 60_000` | `true` | Auth state must be fresh |
+| Mutations | — | — | Always invalidate; never cache |
+
+`refetchOnWindowFocus: false` is deliberate. Your lists are paginated, so a background
+refetch can swap page contents mid-click. Opt back in only where data is truly volatile.
+
+### Query keys — always a factory, never an inline array
+
+`src/api/projects/project.keys.ts`:
+```ts
+export const projectKeys = {
+  all: ['projects'] as const,
+  lists: () => [...projectKeys.all, 'list'] as const,
+  list: (params: ProjectListParams) => [...projectKeys.lists(), params] as const,
+  details: () => [...projectKeys.all, 'detail'] as const,
+  detail: (id: string) => [...projectKeys.details(), id] as const,
+  members: (id: string, params?: PageParams) =>
+    [...projectKeys.detail(id), 'members', params ?? {}] as const,
+};
+```
+
+Keys must include every param the response depends on — otherwise page 2 renders page 1's
+cache.
+
+### Unwrapping the envelope — do it once
+
+The API returns `{ success, data, ... }`. Never unwrap per component:
+
+`src/api/envelope.ts`:
+```ts
+export const unwrap = <T>(r: AxiosResponse<ApiEnvelope<T>>): T => r.data.data;
+export const unwrapList = <T>(r: AxiosResponse<ApiEnvelope<PaginatedResult<T>>>): PaginatedResult<T> =>
+  r.data.data;
+```
+
+### Safe migration from the old `data` array
+
+`data` is now `data.items`. Do **not** rewrite call sites one at a time — that invites
+partial migration. Add the hook first, migrate consumers, then remove the old path.
+
+```ts
+// src/api/projects/project.queries.ts
+export const useProjects = (params: ProjectListParams) =>
+  useQuery({
+    queryKey: projectKeys.list(params),
+    queryFn: async () => {
+      const res = await client.get<ApiEnvelope<PaginatedResult<Project>>>('/projects', {
+        params,
+      });
+      return unwrapList<Project>(res);
+    },
+    placeholderData: (prev) => prev,
+  });
+```
+
+`placeholderData: (prev) => prev` stops the table flashing empty on every page change.
+
+### Mutations — invalidate, don't patch
+
+```ts
+export const useAddProjectMembers = (projectId: string) =>
+  useMutation({
+    mutationFn: (vars: AddProjectMembersDTO) =>
+      client.post(`/projects/${projectId}/members`, vars),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: projectKeys.members(projectId) }),
+        queryClient.invalidateQueries({ queryKey: projectKeys.lists() }),
+      ]);
+    },
+  });
+```
+
+Use the key factory for `invalidateQueries` too — a typo'd inline string silently fails to
+invalidate, leaving stale data with no error.
+
+### Errors
+
+The Axios interceptor already handles 401 → refresh → retry. In components use the
+`error` from `useQuery`; the server returns `{ message, errors[] }`. Show `message` in a
+toast and map `errors[]` by `field` to inline errors (see §8). Don't re-derive error text in
+the component.
+
+---
+
 ## 4. Hard limits
 
 | Limit | Value | Behaviour |
@@ -530,6 +799,15 @@ Never swallow a silent failure. Every mutation gets success **and** error feedba
 - [ ] `tsc` passes — **fix every error; do not silence with `any` or `@ts-ignore`.**
 - [ ] Theme switch toggled and both modes re-checked after all styling is done.
 - [ ] No existing config file modified to make the build pass.
+- [ ] All list responses read `data.items`, never a bare `data` array.
+- [ ] One `QueryClient` in `src/lib/queryClient.ts`, provided once in `main.tsx`.
+- [ ] Query keys come from a key factory, and include every param used.
+- [ ] `staleTime` / `refetchOnWindowFocus` set per query, not left to accident.
+- [ ] Mutations invalidate via the key factory; no hand-edited cache patches.
+- [ ] Envelope unwrapped through `unwrap` / `unwrapList`, not inline.
+- [ ] One shared `PaginationControls`; no per-page reimplementation.
+- [ ] No hardcoded page size or project limit anywhere in components.
+- [ ] Page resets to 1 when filters or org change.
 - [ ] check `pnpm run lint`
 
 

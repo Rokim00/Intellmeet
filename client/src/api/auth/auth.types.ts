@@ -3,7 +3,7 @@ export interface User {
   userId: string;
   userName: string;
   userEmail: string;
-  userRole: 'SuperAdmin' | 'Admin' | 'Member';
+  userRole: 'SuperAdmin' | 'Member';
   isSuperAdmin: boolean;
   avatarUrl: string;
   organizationId?: string | OrganizationSummary;
@@ -21,16 +21,18 @@ export interface OrganizationSummary {
   ownerId?: string;
 }
 
-// Matches IUserLoginInput on server
+// Matches IUserLoginInput on server (userEmail canonical, email accepted as alias)
 export interface LoginDTO {
-  email: string;
+  userEmail: string;
   password: string;
 }
 
-// Matches IUserRegisterInput on server (accepts both name/userName, email/userEmail)
+// Matches IUserRegisterInput on server.
+// `userName` / `userEmail` are canonical. `name` / `email` are deprecated aliases
+// the server still accepts — do not send them.
 export interface SignupDTO {
-  name: string;           // server reads: input.userName || input.name
-  email: string;          // server reads: input.userEmail || input.email
+  userName: string;
+  userEmail: string;
   password: string;
   isCreatingOrg: boolean;
   organizationName?: string;

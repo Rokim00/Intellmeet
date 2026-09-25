@@ -3,6 +3,7 @@ import { User } from '../models/user.model.js';
 import { ApiError } from '../utils/apiError.js';
 import { IVerifyInviteCodeResponse } from '../types/index.js';
 import { generateOrgInviteCode } from '../utils/codeGenerator.js';
+import { getPagination, buildPaginatedResult } from '../utils/pagination.js';
 
 export const verifyInviteCodeService = async (inviteCode: string): Promise<IVerifyInviteCodeResponse> => {
   if (!inviteCode || inviteCode.trim() === '') {
@@ -86,12 +87,25 @@ export const getMyOrganizationService = async (orgId: string) => {
   return org;
 };
 
-export const getOrganizationMembersService = async (orgId: string) => {
+export const getOrganizationMembersService = async (
+  orgId: string,
+  query: Record<string, unknown> = {}
+) => {
   if (!orgId) {
-    throw ApiError.badRequest('User does not belong to any organization');
+    throw ApiError.badRequest('User does not belong to an organization');
   }
 
-  return await User.find({ organization_id: orgId })
-    .select('_id user_name user_email user_role is_super_admin avatar_url created_at updated_at')
-    .sort({ createdAt: -1 });
+  const filter = { organization_id: orgId };
+  const pagination = getPagination(query);
+
+  const [members, total] = await Promise.all([
+    User.find(filter)
+      .select('_id user_name user_email user_role is_super_admin avatar_url created_at updated_at')
+      .sort({ created_at: -1 })
+      .skip(pagination.skip)
+      .limit(pagination.limit),
+    User.countDocuments(filter)
+  ]);
+
+  return buildPaginatedResult(members, total, pagination);
 };

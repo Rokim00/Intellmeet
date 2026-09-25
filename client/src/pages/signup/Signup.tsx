@@ -37,8 +37,8 @@ export const Signup = () => {
     resolver: zodResolver(signupSchema),
     mode: 'onTouched',
     defaultValues: {
-      name: '',
-      email: '',
+      userName: '',
+      userEmail: '',
       password: '',
       isCreatingOrg: true,
       organizationName: '',
@@ -95,8 +95,8 @@ export const Signup = () => {
     setServerError('');
     try {
       await signup({
-        name: values.name,
-        email: values.email,
+        userName: values.userName,
+        userEmail: values.userEmail,
         password: values.password,
         isCreatingOrg: values.isCreatingOrg,
         ...(values.isCreatingOrg
@@ -396,48 +396,48 @@ export const Signup = () => {
                 <Stack spacing={1.25}>
                   {/* Full Name */}
                   <Stack spacing={0.5}>
-                    <Label htmlFor="name" className={labelCls}>
+                    <Label htmlFor="userName" className={labelCls}>
                       Full Name
                     </Label>
                     <Box sx={{ position: 'relative' }}>
                       <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                       <Input
-                        id="name"
+                        id="userName"
                         type="text"
                         autoComplete="name"
-                        aria-invalid={!!errors.name}
-                        aria-describedby={errors.name ? 'name-err' : undefined}
+                        aria-invalid={!!errors.userName}
+                        aria-describedby={errors.userName ? 'userName-err' : undefined}
                         className={`${inputCls} pl-10`}
-                        {...register('name')}
+                        {...register('userName')}
                       />
                     </Box>
-                    {errors.name && (
-                      <p id="name-err" role="alert" className="text-[11px] leading-tight text-red-500 mt-0.5">
-                        {errors.name.message}
+                    {errors.userName && (
+                      <p id="userName-err" role="alert" className="text-[11px] leading-tight text-red-500 mt-0.5">
+                        {errors.userName.message}
                       </p>
                     )}
                   </Stack>
 
                   {/* Email */}
                   <Stack spacing={0.5}>
-                    <Label htmlFor="email" className={labelCls}>
+                    <Label htmlFor="userEmail" className={labelCls}>
                       Email
                     </Label>
                     <Box sx={{ position: 'relative' }}>
                       <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                       <Input
-                        id="email"
+                        id="userEmail"
                         type="email"
                         autoComplete="email"
-                        aria-invalid={!!errors.email}
-                        aria-describedby={errors.email ? 'email-err' : undefined}
+                        aria-invalid={!!errors.userEmail}
+                        aria-describedby={errors.userEmail ? 'userEmail-err' : undefined}
                         className={`${inputCls} pl-10`}
-                        {...register('email')}
+                        {...register('userEmail')}
                       />
                     </Box>
-                    {errors.email && (
-                      <p id="email-err" role="alert" className="text-[11px] leading-tight text-red-500 mt-0.5">
-                        {errors.email.message}
+                    {errors.userEmail && (
+                      <p id="userEmail-err" role="alert" className="text-[11px] leading-tight text-red-500 mt-0.5">
+                        {errors.userEmail.message}
                       </p>
                     )}
                   </Stack>
