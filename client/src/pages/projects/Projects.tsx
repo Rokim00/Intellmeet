@@ -11,6 +11,7 @@ import {
   type Project,
 } from '@/types/project.types';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Button } from '@/components/ui/button';
 import { CreateProjectModal } from '@/components/dashboard/CreateProjectModal';
 
 export const Projects: React.FC = () => {
@@ -51,19 +52,32 @@ export const Projects: React.FC = () => {
       : `Projects (${currentTab.charAt(0).toUpperCase() + currentTab.slice(1).toLowerCase()})`;
 
   return (
-    <div className="min-h-screen w-full bg-[#0c0c0e] text-white p-6 lg:p-8 space-y-6 font-['Plus_Jakarta_Sans']">
+    <div className="w-full bg-background text-foreground p-6 lg:p-8 space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-          <FolderGit2 className="text-emerald-400" size={24} />
-          <span>{pageTitle}</span>
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
+            <FolderGit2 className="text-emerald-500 dark:text-emerald-400" size={24} />
+            <span>{pageTitle}</span>
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Manage your workspace projects, team members, and linked meetings.
+          </p>
+        </div>
+
+        <Button
+          onClick={() => setCreateModalOpen(true)}
+          className="shadow-xs shrink-0 gap-2"
+        >
+          <FolderPlus size={15} />
+          <span>Create Project</span>
+        </Button>
       </div>
 
       {/* Projects Content Area */}
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-zinc-400 gap-2 text-xs">
-          <Loader2 size={18} className="animate-spin text-emerald-400" />
+        <div className="flex items-center justify-center py-16 text-muted-foreground gap-2 text-xs">
+          <Loader2 size={18} className="animate-spin text-emerald-500 dark:text-emerald-400" />
           <span>Loading workspace projects…</span>
         </div>
       ) : filteredProjects.length === 0 ? (
@@ -94,11 +108,11 @@ export const Projects: React.FC = () => {
             return (
               <div
                 key={pId || pName}
-                className="rounded-lg border border-zinc-800/80 bg-[#121214] p-5 hover:border-zinc-700 transition-all shadow-md space-y-4 flex flex-col justify-between"
+                className="rounded-md border border-border bg-card text-card-foreground p-5 hover:border-emerald-500/40 transition-all shadow-xs space-y-4 flex flex-col justify-between"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-sm">
+                    <span className="font-mono text-xs font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-sm">
                       {pCode}
                     </span>
                     <span
@@ -110,36 +124,36 @@ export const Projects: React.FC = () => {
                     </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-white leading-snug">{pName}</h3>
-                  <p className="text-xs text-zinc-400 line-clamp-2">
+                  <h3 className="text-base font-bold text-foreground leading-snug">{pName}</h3>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
                     {pDesc || 'No description provided for this project.'}
                   </p>
                 </div>
 
                 {/* Metrics */}
-                <div className="pt-3 border-t border-zinc-800/60 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="bg-[#161618] rounded-sm p-2">
-                    <div className="flex items-center justify-center gap-1 text-zinc-400 mb-0.5">
+                <div className="pt-3 border-t border-border grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-secondary rounded-sm p-2">
+                    <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">
                       <Users size={12} />
                       <span className="text-[10px]">Team</span>
                     </div>
-                    <div className="font-bold text-white">{memberCount}</div>
+                    <div className="font-bold text-foreground">{memberCount}</div>
                   </div>
 
-                  <div className="bg-[#161618] rounded-sm p-2">
-                    <div className="flex items-center justify-center gap-1 text-zinc-400 mb-0.5">
+                  <div className="bg-secondary rounded-sm p-2">
+                    <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">
                       <Video size={12} />
                       <span className="text-[10px]">Meets</span>
                     </div>
-                    <div className="font-bold text-white">{project.meetingCount || 0}</div>
+                    <div className="font-bold text-foreground">{project.meetingCount || 0}</div>
                   </div>
 
-                  <div className="bg-[#161618] rounded-sm p-2">
-                    <div className="flex items-center justify-center gap-1 text-zinc-400 mb-0.5">
+                  <div className="bg-secondary rounded-sm p-2">
+                    <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">
                       <CheckSquare size={12} />
                       <span className="text-[10px]">Tasks</span>
                     </div>
-                    <div className="font-bold text-white">{project.taskCount || 0}</div>
+                    <div className="font-bold text-foreground">{project.taskCount || 0}</div>
                   </div>
                 </div>
               </div>
