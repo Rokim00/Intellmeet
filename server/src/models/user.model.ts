@@ -85,7 +85,7 @@ export class UserClass {
 
   @prop({
     type: () => String,
-    enum: ['SuperAdmin', 'Admin', 'Member'],
+    enum: ['SuperAdmin', 'Member'],
     default: 'Member',
     alias: 'userRole'
   })

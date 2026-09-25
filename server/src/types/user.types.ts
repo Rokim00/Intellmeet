@@ -1,6 +1,6 @@
 import { Document, Types } from 'mongoose';
 
-export type UserRole = 'SuperAdmin' | 'Admin' | 'Member';
+export type UserRole = 'SuperAdmin' | 'Member';
 
 export interface IUser {
   _id: Types.ObjectId;
