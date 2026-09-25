@@ -7,7 +7,6 @@ import {
   getSortedRowModel,
   flexRender,
   createColumnHelper,
-  type ColumnDef,
 } from '@tanstack/react-table';
 import {
   Search,
@@ -43,9 +42,9 @@ export const MembersTable: React.FC<MembersTableProps> = ({
   const [deletingMember, setDeletingMember] = useState<Member | null>(null);
 
   // Active filter logic & normalization for any backend format (User or Member)
-  const filteredData = useMemo(() => {
+  const filteredData: Member[] = useMemo(() => {
     return initialMembers
-      .map((m: Member) => ({
+      .map((m: Member): Member => ({
         id: m.id || m._id || m.userId || Math.random().toString(),
         name: m.name || m.userName || m.userEmail || 'Team Member',
         email: m.email || m.userEmail || '',
@@ -54,8 +53,8 @@ export const MembersTable: React.FC<MembersTableProps> = ({
         joinedAt: m.joinedAt
           ? String(m.joinedAt).split('T')[0]
           : m.createdAt
-          ? String(m.createdAt).split('T')[0]
-          : '2026-03-01',
+            ? String(m.createdAt).split('T')[0]
+            : '2026-03-01',
         avatarUrl: m.avatarUrl || '',
       }))
       .filter((member) => {
@@ -69,7 +68,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
       });
   }, [initialMembers, roleFilter, statusFilter, globalFilter]);
 
-  const columns = useMemo<ColumnDef<Member>[]>(
+  const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
         header: 'Member',
@@ -192,6 +191,8 @@ export const MembersTable: React.FC<MembersTableProps> = ({
     []
   );
 
+  // TanStack Table returns stateful functions that cannot be memoized safely.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -348,6 +349,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
 
       {/* Edit Modal */}
       <EditMemberModal
+        key={editingMember?.id}
         isOpen={!!editingMember}
         member={editingMember}
         onClose={() => setEditingMember(null)}

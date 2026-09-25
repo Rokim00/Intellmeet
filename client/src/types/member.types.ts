@@ -9,6 +9,12 @@ export interface Member {
   status: MemberStatus;
   joinedAt: string;
   avatarUrl?: string;
+  _id?: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  userRole?: MemberRole;
+  createdAt?: string;
 }
 
 export interface UpdateMemberDTO {
