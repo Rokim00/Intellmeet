@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -20,66 +21,55 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   const colorMap = {
     emerald: {
-      bgGlow: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
-      iconBox: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-      btn: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40',
+      iconBox: 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/25 text-emerald-600 dark:text-emerald-400',
+      btn: '',
     },
     purple: {
-      bgGlow: 'from-purple-500/10 via-purple-500/5 to-transparent',
-      iconBox: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
-      btn: 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-950/40',
+      iconBox: 'bg-purple-500/10 dark:bg-purple-500/15 border-purple-500/25 text-purple-600 dark:text-purple-400',
+      btn: 'bg-purple-600 hover:bg-purple-500 text-white',
     },
     blue: {
-      bgGlow: 'from-blue-500/10 via-blue-500/5 to-transparent',
-      iconBox: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-      btn: 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-950/40',
+      iconBox: 'bg-blue-500/10 dark:bg-blue-500/15 border-blue-500/25 text-blue-600 dark:text-blue-400',
+      btn: 'bg-blue-600 hover:bg-blue-500 text-white',
     },
     amber: {
-      bgGlow: 'from-amber-500/10 via-amber-500/5 to-transparent',
-      iconBox: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
-      btn: 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-950/40',
+      iconBox: 'bg-amber-500/10 dark:bg-amber-500/15 border-amber-500/25 text-amber-600 dark:text-amber-400',
+      btn: 'bg-amber-600 hover:bg-amber-500 text-white',
     },
   };
 
   const scheme = colorMap[accentColor];
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-zinc-800/80 bg-[#121214] p-8 sm:p-12 text-center shadow-2xl">
-      {/* Background radial glow */}
-      <div
-        className={`absolute inset-0 bg-radial ${scheme.bgGlow} pointer-events-none opacity-60`}
-      />
-
-      <div className="relative z-10 mx-auto flex max-w-md flex-col items-center">
-        {/* Visual Illustration Graphic Icon */}
-        <div className="relative mb-5">
-          <div className="absolute -inset-2 rounded-full bg-zinc-800/40 blur-md" />
-          <div
-            className={`relative flex h-16 w-16 items-center justify-center rounded-2xl border ${scheme.iconBox} shadow-lg`}
-          >
-            <Icon size={32} />
-          </div>
+    <div className="w-full max-w-xl mx-auto p-8 sm:p-12 text-center my-4">
+      <div className="mx-auto flex flex-col items-center">
+        {/* Crisp Icon Container - Clean, Sharp, No blur halo */}
+        <div
+          className={`mb-4 flex h-14 w-14 items-center justify-center rounded-md border ${scheme.iconBox} shadow-xs`}
+        >
+          <Icon size={26} strokeWidth={2} />
         </div>
 
         {/* Title & Description */}
-        <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+        <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
           {title}
         </h3>
-        <p className="mt-2 text-xs sm:text-sm text-zinc-400 max-w-sm leading-relaxed">
+        <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-sm leading-relaxed">
           {description}
         </p>
 
-        {/* Optional Action Call-To-Action Button */}
+        {/* Action Button */}
         {actionLabel && onAction && (
-          <button
+          <Button
             onClick={onAction}
-            className={`mt-6 inline-flex items-center gap-2 rounded-sm px-4 py-2.5 text-xs font-semibold shadow-md transition-all active:scale-[0.98] cursor-pointer ${scheme.btn}`}
+            className={`mt-6 active:scale-[0.98] shadow-xs gap-2 ${scheme.btn}`}
           >
             <Plus size={15} />
             <span>{actionLabel}</span>
-          </button>
+          </Button>
         )}
       </div>
     </div>
   );
 };
+

@@ -3,23 +3,35 @@ import * as React from 'react';
 export interface IntellMeetLogoProps extends React.SVGProps<SVGSVGElement> {
   size?: number | string;
   color?: string;
+  useGradient?: boolean;
 }
 
 export const IntellMeetLogo: React.FC<IntellMeetLogoProps> = ({
   size = 22,
-  color = '#ffffff',
+  color,
+  useGradient = true,
+  className,
   ...props
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 25.693 25.693"
-    fill={color}
-    xmlns="http://www.w3.org/2000/svg"
-    style={{ display: 'block', ...props.style }}
-    {...props}
-  >
-    <path d="M25.592,15.313c-0.467-1.286-0.611-2.534-2.036-2.997c-0.979-0.319-3.732-1.246-5.354-1.793
+}) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 25.693 25.693"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={{ display: 'block', flexShrink: 0, ...props.style }}
+      {...props}
+    >
+      <defs>
+        <linearGradient id="intellmeet-emerald-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#047857" />
+        </linearGradient>
+      </defs>
+      <path
+        fill={color || (useGradient ? 'url(#intellmeet-emerald-gradient)' : '#10b981')}
+        d="M25.592,15.313c-0.467-1.286-0.611-2.534-2.036-2.997c-0.979-0.319-3.732-1.246-5.354-1.793
 		c-0.038-0.15-0.093-0.304-0.157-0.463l3.619-0.135c0,0,2.464-0.248,1.317-1.464c-1.136-1.213-2.315-2.246-2.315-2.246
 		s-1.247-1.5-2.499-0.144c-0.751,0.817-1.297,1.477-1.611,1.874c-0.045-0.047-0.093-0.097-0.139-0.144
 		c-0.025-0.024-0.055-0.043-0.079-0.067l0.368-2.376c0,0,0.963-1.393-0.361-2.213c-1.318-0.82-2.679-1.606-3.495-1.426
@@ -29,6 +41,8 @@ export const IntellMeetLogo: React.FC<IntellMeetLogoProps> = ({
 		c1.255-1.334,4.273-4.314,5.729-5.741c0.07,0.045,0.147,0.089,0.229,0.126c0.097,0.047,0.188,0.083,0.282,0.126l-1.348,4.81
 		c0,0-1.822,4.175-0.179,5.247c0.785,0.64,1.64,2.069,4.244,1.927c0,0,1.93,0.287,3.319-1.606c0,0,1.893-1.211,0.609-3.39
 		c-0.927-1.567-2.604-4.718-3.476-6.365c0.146-0.028,0.288-0.066,0.423-0.114l4.478,4.301c0,0,1.644,1.857,3.25,0.643
-		C24.77,17.454,26.055,16.598,25.592,15.313z" />
-  </svg>
-);
+		C24.77,17.454,26.055,16.598,25.592,15.313z"
+      />
+    </svg>
+  );
+};
