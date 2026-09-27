@@ -154,7 +154,7 @@ Delete any Admin-only UI, filter option, or role dropdown item. There is no midd
 ```diff
 -export type ProjectStatus = 'active' | 'archived' | 'completed' | 'planning';
 +export type ProjectStatus = 'active' | 'archived' | 'completed';
-```
+```]=
 
 ### 1b.4 Add roster fields to `CreateProjectDTO`
 

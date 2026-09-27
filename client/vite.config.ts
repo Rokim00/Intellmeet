@@ -36,4 +36,15 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    port: 5173,
+    // Proxies /api -> local Express server so phones on the same Wi-Fi
+    // only need to reach Vite. No LAN IP in VITE_API_BASE_URL needed.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
 });
