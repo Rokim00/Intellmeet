@@ -7,6 +7,7 @@
     "dev": "concurrently -n server,client -c green,cyan \"pnpm -r --filter server dev\" \"pnpm -r --filter client dev\"",
     "dev:server": "pnpm -r --filter server dev",
     "dev:client": "pnpm -r --filter client dev",
+    "dev:mob": "concurrently -n server,client -c green,cyan \"pnpm -r --filter server dev\" \"pnpm -r --filter client dev:mob\"",
     "lint": "pnpm -r lint",
     "lint:server": "pnpm -r --filter server lint",
     "lint:client": "pnpm -r --filter client lint",
