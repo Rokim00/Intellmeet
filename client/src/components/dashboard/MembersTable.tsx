@@ -18,7 +18,7 @@ import {
   ChevronDown,
   Shield,
 } from 'lucide-react';
-import type { Member, MemberRole, MemberStatus } from '@/types/member.types';
+import type { Member, UserRole, MemberStatus } from '@/types/member.types';
 import { EditMemberModal } from './EditMemberModal';
 import { DeleteMemberModal } from './DeleteMemberModal';
 
@@ -49,8 +49,8 @@ export const MembersTable: React.FC<MembersTableProps> = ({
         id: m.id || m._id || m.userId || Math.random().toString(),
         name: m.name || m.userName || m.userEmail || 'Team Member',
         email: m.email || m.userEmail || '',
-        role: (m.role || m.userRole || 'Member') as MemberRole,
-        status: (m.status || 'Active') as MemberStatus,
+        role: (m.role || m.userRole || 'Member') as UserRole,
+        status: (m.status || 'active') as MemberStatus,
         joinedAt: m.joinedAt
           ? String(m.joinedAt).split('T')[0]
           : m.createdAt
@@ -104,16 +104,12 @@ export const MembersTable: React.FC<MembersTableProps> = ({
       columnHelper.accessor('role', {
         header: 'Role',
         cell: (info) => {
-          const rawRole = info.getValue() as MemberRole;
-          const role: MemberRole = ['SuperAdmin', 'Admin', 'Host', 'Member'].includes(rawRole)
-            ? rawRole
-            : 'Member';
+          const rawRole = info.getValue() as UserRole;
+          const role: UserRole = rawRole === 'SuperAdmin' ? 'SuperAdmin' : 'Member';
 
-          const roleBadgeStyles: Record<MemberRole, string> = {
+          const roleBadgeStyles: Record<UserRole, string> = {
             SuperAdmin:
               'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30 shadow-xs',
-            Admin: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 shadow-xs',
-            Host: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 shadow-xs',
             Member: 'bg-secondary text-secondary-foreground border-border shadow-xs',
           };
 
@@ -131,15 +127,15 @@ export const MembersTable: React.FC<MembersTableProps> = ({
       columnHelper.accessor('status', {
         header: 'Status',
         cell: (info) => {
-          const rawStatus = info.getValue() as MemberStatus;
-          const status: MemberStatus = ['Active', 'Pending', 'Suspended'].includes(rawStatus)
-            ? rawStatus
-            : 'Active';
+          const rawStatus = info.getValue() as string;
+          const status: MemberStatus = ['active', 'invited', 'suspended'].includes(rawStatus)
+            ? (rawStatus as MemberStatus)
+            : 'active';
 
           const statusStyles: Record<MemberStatus, { dot: string; text: string }> = {
-            Active: { dot: 'bg-emerald-500 dark:bg-emerald-400', text: 'text-emerald-700 dark:text-emerald-400 font-semibold' },
-            Pending: { dot: 'bg-amber-500 dark:bg-amber-400', text: 'text-amber-700 dark:text-amber-400 font-semibold' },
-            Suspended: { dot: 'bg-red-500 dark:bg-red-400', text: 'text-red-700 dark:text-red-400 font-semibold' },
+            active: { dot: 'bg-emerald-500 dark:bg-emerald-400', text: 'text-emerald-700 dark:text-emerald-400 font-semibold' },
+            invited: { dot: 'bg-amber-500 dark:bg-amber-400', text: 'text-amber-700 dark:text-amber-400 font-semibold' },
+            suspended: { dot: 'bg-red-500 dark:bg-red-400', text: 'text-red-700 dark:text-red-400 font-semibold' },
           };
 
           const style = statusStyles[status];
@@ -236,8 +232,6 @@ export const MembersTable: React.FC<MembersTableProps> = ({
             >
               <option value="ALL">All Roles</option>
               <option value="SuperAdmin">SuperAdmin</option>
-              <option value="Admin">Admin</option>
-              <option value="Host">Host</option>
               <option value="Member">Member</option>
             </select>
             <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-2 pointer-events-none border-l border-emerald-500/30">
@@ -253,9 +247,9 @@ export const MembersTable: React.FC<MembersTableProps> = ({
               className="appearance-none h-10 rounded-md border border-border/80 bg-card px-3 pr-10 text-xs font-medium text-foreground focus:border-emerald-500 transition-all cursor-pointer shadow-xs"
             >
               <option value="ALL">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Pending">Pending</option>
-              <option value="Suspended">Suspended</option>
+              <option value="active">Active</option>
+              <option value="invited">Invited</option>
+              <option value="suspended">Suspended</option>
             </select>
             <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-2 pointer-events-none border-l border-emerald-500/30">
               <ChevronDown size={14} className="text-emerald-600 dark:text-emerald-400" />

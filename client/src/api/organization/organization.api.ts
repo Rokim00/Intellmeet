@@ -1,6 +1,6 @@
 import client from '../client';
 import type { OrgVerifyResponse } from './organization.types';
-import type { Member, MemberRole, MemberStatus } from '@/types/member.types';
+import type { Member, UserRole, MemberStatus } from '@/types/member.types';
 
 export const verifyInviteCode = (code: string) =>
   client.get<{ data: OrgVerifyResponse }>(`/organizations/invite/${code}`);
@@ -13,7 +13,7 @@ export const regenerateInviteCode = () =>
     '/organizations/invite/regenerate'
   );
 
-export const updateMemberRole = (memberId: string, role: MemberRole) =>
+export const updateMemberRole = (memberId: string, role: UserRole) =>
   client.patch<{ data: Member }>(`/organizations/members/${memberId}/role`, { role });
 
 export const updateMemberStatus = (memberId: string, status: MemberStatus) =>

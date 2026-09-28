@@ -61,8 +61,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
 
   // `useMutation` invalidates the projects query and `addProject` seeds the
   // cache, so calling `refreshProjects()` here would just be a second request.
-  const handleProjectCreated = (newProj: Project) => {
-    addProject(newProj);
+  const handleProjectCreated = (newProj?: Project) => {
+    if (newProj) {
+      addProject(newProj);
+    }
     setCreateModalOpen(false);
   };
 

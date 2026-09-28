@@ -10,10 +10,10 @@ export const Dashboard: React.FC = () => {
 
   const totalMembers = members.length;
   const activeAdmins = members.filter(
-    (m) => m.role === 'SuperAdmin' || m.role === 'Admin'
+    (m) => m.role === 'SuperAdmin'
   ).length;
-  const pendingMembers = members.filter((m) => m.status === 'Pending').length;
-  const suspendedMembers = members.filter((m) => m.status === 'Suspended').length;
+  const pendingMembers = members.filter((m) => m.status === 'invited').length;
+  const suspendedMembers = members.filter((m) => m.status === 'suspended').length;
 
   return (
     <div className="w-full bg-background text-foreground p-6 lg:p-8 space-y-6">

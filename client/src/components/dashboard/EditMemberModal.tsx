@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Shield, CheckCircle } from 'lucide-react';
-import type { Member, MemberRole, MemberStatus } from '@/types/member.types';
+import type { Member, UserRole, MemberStatus } from '@/types/member.types';
 
 interface EditMemberModalProps {
   isOpen: boolean;
@@ -15,8 +15,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const [role, setRole] = useState<MemberRole>(member?.role ?? 'Member');
-  const [status, setStatus] = useState<MemberStatus>(member?.status ?? 'Active');
+  const [role, setRole] = useState<UserRole>(member?.role ?? 'Member');
+  const [status, setStatus] = useState<MemberStatus>(member?.status ?? 'active');
 
   if (!isOpen || !member) return null;
 
@@ -71,12 +71,10 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
               <Shield size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <select
                 value={role}
-                onChange={(e) => setRole(e.target.value as MemberRole)}
+                onChange={(e) => setRole(e.target.value as UserRole)}
                 className="h-10 w-full rounded-md border border-border bg-card pl-10 pr-3.5 text-sm text-foreground focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/30 transition-colors cursor-pointer"
               >
                 <option value="SuperAdmin">SuperAdmin</option>
-                <option value="Admin">Admin</option>
-                <option value="Host">Host</option>
                 <option value="Member">Member</option>
               </select>
             </div>
@@ -94,9 +92,9 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
                 onChange={(e) => setStatus(e.target.value as MemberStatus)}
                 className="h-10 w-full rounded-md border border-border bg-card pl-10 pr-3.5 text-sm text-foreground focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/30 transition-colors cursor-pointer"
               >
-                <option value="Active">Active</option>
-                <option value="Pending">Pending</option>
-                <option value="Suspended">Suspended</option>
+                <option value="active">Active</option>
+                <option value="invited">Invited</option>
+                <option value="suspended">Suspended</option>
               </select>
             </div>
           </div>

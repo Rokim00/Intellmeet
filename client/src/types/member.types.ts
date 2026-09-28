@@ -1,11 +1,15 @@
-export type MemberRole = 'SuperAdmin' | 'Admin' | 'Host' | 'Member';
-export type MemberStatus = 'Active' | 'Pending' | 'Suspended';
+import type { UserRole } from '@/types/user.types';
+import type { ProjectRole } from '@/types/project.types';
+
+export type { UserRole, ProjectRole };
+
+export type MemberStatus = 'active' | 'invited' | 'suspended';
 
 export interface Member {
   id: string;
   name: string;
   email: string;
-  role: MemberRole;
+  role: UserRole;
   status: MemberStatus;
   joinedAt: string;
   avatarUrl?: string;
@@ -13,11 +17,11 @@ export interface Member {
   userId?: string;
   userName?: string;
   userEmail?: string;
-  userRole?: MemberRole;
+  userRole?: UserRole;
   createdAt?: string;
 }
 
 export interface UpdateMemberDTO {
-  role?: MemberRole;
+  role?: UserRole;
   status?: MemberStatus;
 }

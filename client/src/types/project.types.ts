@@ -1,4 +1,51 @@
-export type ProjectStatus = 'active' | 'archived' | 'completed' | 'planning';
+export type ProjectRole = 'Member' | 'Host';
+
+export type ProjectStatus = 'active' | 'archived' | 'completed';
+
+export interface ProjectMember {
+  userId: string;
+  projectRole: ProjectRole;
+  user?: {
+    _id: string;
+    user_name: string;
+    user_email: string;
+    avatar_url: string;
+    user_role: string;
+    is_super_admin: boolean;
+  } | null;
+}
+
+export interface ProjectMembersResponse {
+  projectId: string;
+  projectName: string;
+  members: ProjectMember[];
+  memberCount: number;
+  hostCount: number;
+  limits: { maxMembers: number; maxHosts: number };
+}
+
+export interface AddProjectMembersDTO {
+  userIds: string[];
+  projectRole?: ProjectRole;
+}
+
+export interface UpdateProjectMemberRoleDTO {
+  projectRole: ProjectRole;
+}
+
+export interface CreateProjectDTO {
+  projectName: string;
+  projectDescription?: string;
+  projectStatus?: ProjectStatus;
+  members?: string[];
+  hosts?: string[];
+}
+
+export interface ProjectMutationResponse {
+  project: Project;
+  members: ProjectMember[];
+  member?: { userId: string; projectRole: ProjectRole };
+}
 
 export interface Project {
   id?: string;
@@ -18,15 +65,6 @@ export interface Project {
   taskCount?: number;
   createdAt?: string;
   updatedAt?: string;
-}
-
-export interface CreateProjectDTO {
-  name: string;
-  projectName?: string;
-  description?: string;
-  projectDescription?: string;
-  status?: string;
-  projectStatus?: string;
 }
 
 export const getProjectName = (p?: Project | null): string => {

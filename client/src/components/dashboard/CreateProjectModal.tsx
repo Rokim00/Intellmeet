@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { createProject } from '@/api/project/project.api';
-import type { Project } from '@/types/project.types';
+import type { Project, ProjectStatus } from '@/types/project.types';
 import { parseApiError } from '@/utils/apiError';
 import { useMutation } from '@/hooks/useApi';
 import { queryKeys } from '@/api/queryClient';
@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
-  { value: 'planning', label: 'Planning' },
   { value: 'completed', label: 'Completed' },
   { value: 'archived', label: 'Archived' },
 ];
@@ -21,7 +20,7 @@ const STATUS_OPTIONS = [
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreated: (project: Project) => void;
+  onCreated: (project?: Project) => void;
 }
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
@@ -31,15 +30,15 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [status, setStatus] = useState('active');
+  const [status, setStatus] = useState<ProjectStatus>('active');
   const [nameError, setNameError] = useState('');
 
-  const { mutate, pending: loading, error } = useMutation<Project, string>({
-    mutationFn: (projectStatus) =>
+  const { mutate, pending: loading, error } = useMutation<Project, { name: string; description: string; status: ProjectStatus }>({
+    mutationFn: (variables) =>
       createProject({
-        name: name.trim(),
-        description: description.trim(),
-        status: projectStatus,
+        projectName: variables.name,
+        projectDescription: variables.description,
+        projectStatus: variables.status,
       }),
     invalidates: [queryKeys.projects.all],
     onSuccess: (project) => {
@@ -52,27 +51,47 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     },
   });
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setName('');
     setDescription('');
     setStatus('active');
     setNameError('');
     onClose();
-  };
+  }, [onClose]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (loading) return;
     reset();
-  };
+  }, [loading, reset]);
+
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    if (nameError) {
+      setNameError('');
+    }
+  }, [nameError]);
+
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDescription(e.target.value);
+  }, []);
+
+  const handleStatusChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatus(e.target.value as ProjectStatus);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       setNameError('Project name is required');
       return;
     }
     setNameError('');
-    void mutate(status);
+    void mutate({
+      name: trimmedName,
+      description: description.trim(),
+      status,
+    });
   };
 
   const submitError = error ? parseApiError(error).message : '';
@@ -108,9 +127,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             id="project-name"
             name="name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleNameChange}
             placeholder="e.g. Mobile App v2, AI Summarizer"
             required
+            autoComplete="off"
           />
         </FormField>
 
@@ -119,8 +139,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             id="project-description"
             name="description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={handleDescriptionChange}
             placeholder="Brief summary of scope, objectives, or deliverables…"
+            autoComplete="off"
           />
         </FormField>
 
@@ -129,7 +150,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             id="project-status"
             name="status"
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={handleStatusChange}
             options={STATUS_OPTIONS}
           />
         </FormField>
